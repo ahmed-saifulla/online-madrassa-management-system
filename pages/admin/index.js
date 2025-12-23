@@ -1,6 +1,5 @@
 import { useEffect } from 'react'
 import { useRouter } from 'next/router'
-import Nav from '../../components/Nav'
 
 export default function AdminIndex() {
   const router = useRouter()
@@ -14,19 +13,17 @@ export default function AdminIndex() {
 
   const handleLogout = () => {
     localStorage.removeItem('madrassa_admin')
+    if (typeof window !== 'undefined') window.dispatchEvent(new Event('madrassa_auth_changed'))
     router.push('/')
   }
 
   return (
-    <div>
-      <Nav />
-      <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-        <h1 className="text-2xl font-semibold">Admin Dashboard</h1>
-        <p className="mt-4 text-gray-600">You are signed in as `admin`.</p>
-        <div className="mt-6">
-          <button onClick={handleLogout} className="px-4 py-2 bg-red-500 text-white rounded-md">Logout</button>
-        </div>
-      </main>
-    </div>
+    <>
+      <h1 className="text-2xl font-semibold">Admin Dashboard</h1>
+      <p className="mt-4 text-gray-600">You are signed in as `admin`.</p>
+      <div className="mt-6">
+        <button onClick={handleLogout} className="px-4 py-2 bg-red-500 text-white rounded-md">Logout</button>
+      </div>
+    </>
   )
 }

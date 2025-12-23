@@ -8,10 +8,16 @@ export default function Nav() {
   const router = useRouter()
 
   useEffect(() => {
-    if (typeof window !== 'undefined') {
+    if (typeof window === 'undefined') return
+
+    const check = () => {
       const ok = !!(localStorage.getItem('madrassa_admin') || localStorage.getItem('madrassa_teacher') || localStorage.getItem('madrassa_student'))
       setIsLoggedIn(ok)
     }
+
+    check()
+    window.addEventListener('madrassa_auth_changed', check)
+    return () => window.removeEventListener('madrassa_auth_changed', check)
   }, [])
 
   const handleLogout = () => {
@@ -22,6 +28,7 @@ export default function Nav() {
     }
     setIsLoggedIn(false)
     router.push('/')
+    if (typeof window !== 'undefined') window.dispatchEvent(new Event('madrassa_auth_changed'))
   }
 
   return (

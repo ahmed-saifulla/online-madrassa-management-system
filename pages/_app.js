@@ -2,6 +2,7 @@ import '../styles/globals.css'
 import Head from 'next/head'
 import { useEffect } from 'react'
 import { useRouter } from 'next/router'
+import Layout from '../components/Layout'
 
 export default function MyApp({ Component, pageProps }) {
   const router = useRouter()
@@ -26,7 +27,9 @@ export default function MyApp({ Component, pageProps }) {
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <title>Online Madrassa</title>
       </Head>
-      <Component {...pageProps} />
+      <Layout>
+        <Component {...pageProps} />
+      </Layout>
     </>
   )
 }
