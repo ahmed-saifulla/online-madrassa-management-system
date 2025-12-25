@@ -39,7 +39,8 @@ export default function Sidebar({ open, onClose }) {
       <nav className="px-2 py-4 space-y-1">
         <Link href="/welcome" className="block px-3 py-2 rounded-md text-sm text-gray-700 hover:bg-gray-100">Home</Link>
         <Link href="/teachers" className="block px-3 py-2 rounded-md text-sm text-gray-700 hover:bg-gray-100">Teachers</Link>
-        <Link href="/admin" className="block px-3 py-2 rounded-md text-sm text-gray-700 hover:bg-gray-100">Admin</Link>
+        <Link href="/divisions" className="block px-3 py-2 rounded-md text-sm text-gray-700 hover:bg-gray-100">Divisions</Link>
+        {/* <Link href="/admin" className="block px-3 py-2 rounded-md text-sm text-gray-700 hover:bg-gray-100">Admin</Link> */}
       </nav>
       <div className="mt-auto px-2 py-4">
         <button onClick={handleLogout} className="w-full text-left px-3 py-2 rounded-md text-sm text-red-600 hover:bg-red-50">Logout</button>

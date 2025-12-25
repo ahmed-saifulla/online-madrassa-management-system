@@ -41,9 +41,10 @@ export default function Nav() {
 
           {isLoggedIn && (
             <nav className="hidden md:flex items-center space-x-4">
-              <Link href="/teachers" className="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100">Teachers</Link>
+              <Link href="/teachers" className="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100">Teachers1</Link>
+              <Link href="/divisions" className="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100">Divisions</Link>
               <button className="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100">Students</button>
-              <Link href="/admin" className="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100">Admin</Link>
+              {/* <Link href="/admin" className="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-100">Admin</Link> */}
               <button onClick={handleLogout} className="px-3 py-2 rounded-md text-sm font-medium text-red-600 hover:bg-red-50">Logout</button>
             </nav>
           )}
@@ -68,6 +69,7 @@ export default function Nav() {
         <div className="md:hidden bg-white border-t">
           <div className="px-2 pt-2 pb-3 space-y-1">
             <Link href="/teachers" className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:bg-gray-100">Teachers</Link>
+            <Link href="/divisions" className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:bg-gray-100">Divisions</Link>
             <button className="block w-full text-left px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:bg-gray-100">Students</button>
             <Link href="/admin" className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:bg-gray-100">Admin</Link>
             <button onClick={handleLogout} className="block w-full text-left px-3 py-2 rounded-md text-base font-medium text-red-600 hover:bg-red-50">Logout</button>

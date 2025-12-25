@@ -1,5 +1,7 @@
 import { useState, useMemo, useEffect } from 'react'
 import { teachers } from '../../data/teachers'
+import IconButton from '../../components/IconButton'
+import CrudForm from '../../components/CrudForm'
 
 export default function Teachers() {
   const [list, setList] = useState([])
@@ -137,44 +139,40 @@ export default function Teachers() {
         <h2 className="text-xl font-semibold">Teachers</h2>
         <div className="flex items-center gap-2">
           <input value={query} onChange={e => setQuery(e.target.value)} placeholder="Search teachers..." className="px-3 py-2 border rounded" />
-          <span className="relative inline-block group">
-            <button onClick={() => setShowForm(s => !s)} title={showForm ? 'Cancel' : 'Add Teacher'} aria-label={showForm ? 'Cancel' : 'Add Teacher'} className="p-2 bg-indigo-600 text-white rounded flex items-center justify-center">
-              {showForm ? (
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              ) : (
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                </svg>
-              )}
-            </button>
-            <span className="pointer-events-none absolute -top-8 left-1/2 transform -translate-x-1/2 whitespace-nowrap bg-black text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition">{showForm ? 'Cancel' : 'Add Teacher'}</span>
-          </span>
+          <IconButton title={showForm ? 'Cancel' : 'Add Teacher'} onClick={() => setShowForm(s => !s)} className="p-2 bg-indigo-600 text-white rounded">
+            {showForm ? (
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            ) : (
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              </svg>
+            )}
+          </IconButton>
         </div>
       </div>
 
       {showForm && (
-        <form onSubmit={handleAdd} className="mt-4 bg-white p-4 rounded shadow">
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <input value={name} onChange={e => setName(e.target.value)} placeholder="Name" className="p-2 border rounded" />
-            <input value={subject} onChange={e => setSubject(e.target.value)} placeholder="Subject" className="p-2 border rounded" />
-            <input value={avatar} onChange={e => setAvatar(e.target.value)} placeholder="Avatar URL (optional)" className="p-2 border rounded" />
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 mt-3">
-            <input value={salary} onChange={e => setSalary(e.target.value)} placeholder="Salary" className="p-2 border rounded" />
-            <input type="date" value={dateOfJoin} onChange={e => setDateOfJoin(e.target.value)} className="p-2 border rounded" />
-            <input value={mobile} onChange={e => setMobile(e.target.value)} placeholder="Mobile" className="p-2 border rounded" />
-            <select value={gender} onChange={e => setGender(e.target.value)} className="p-2 border rounded">
-              <option>Male</option>
-              <option>Female</option>
-              <option>Other</option>
-            </select>
-          </div>
-          <div className="mt-3">
-            <button type="submit" className="px-4 py-2 bg-green-600 text-white rounded">Add</button>
-          </div>
-        </form>
+        <div className="mt-4 bg-white p-4 rounded shadow">
+          <CrudForm onSubmit={handleAdd} onCancel={() => setShowForm(false)} saveTitle="Add" cancelTitle="Cancel">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <input value={name} onChange={e => setName(e.target.value)} placeholder="Name" className="p-2 border rounded" />
+              <input value={subject} onChange={e => setSubject(e.target.value)} placeholder="Subject" className="p-2 border rounded" />
+              <input value={avatar} onChange={e => setAvatar(e.target.value)} placeholder="Avatar URL (optional)" className="p-2 border rounded" />
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 mt-3">
+              <input value={salary} onChange={e => setSalary(e.target.value)} placeholder="Salary" className="p-2 border rounded" />
+              <input type="date" value={dateOfJoin} onChange={e => setDateOfJoin(e.target.value)} className="p-2 border rounded" />
+              <input value={mobile} onChange={e => setMobile(e.target.value)} placeholder="Mobile" className="p-2 border rounded" />
+              <select value={gender} onChange={e => setGender(e.target.value)} className="p-2 border rounded">
+                <option>Male</option>
+                <option>Female</option>
+                <option>Other</option>
+              </select>
+            </div>
+          </CrudForm>
+        </div>
       )}
 
       <div className="mt-4 grid gap-4 sm:grid-cols-2">
@@ -183,41 +181,25 @@ export default function Teachers() {
             <img src={t.avatar} alt={t.name} className="h-14 w-14 rounded-full object-cover" />
             <div className="flex-1">
               {editingId === t.id ? (
-                <form onSubmit={saveEdit} className="space-y-2">
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                    <input value={editName} onChange={e => setEditName(e.target.value)} className="p-2 border rounded" />
-                    <input value={editSubject} onChange={e => setEditSubject(e.target.value)} className="p-2 border rounded" />
-                    <input value={editAvatar} onChange={e => setEditAvatar(e.target.value)} className="p-2 border rounded" />
-                  </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-4 gap-2">
-                    <input value={editSalary} onChange={e => setEditSalary(e.target.value)} className="p-2 border rounded" />
-                    <input type="date" value={editDateOfJoin} onChange={e => setEditDateOfJoin(e.target.value)} className="p-2 border rounded" />
-                    <input value={editMobile} onChange={e => setEditMobile(e.target.value)} className="p-2 border rounded" />
-                    <select value={editGender} onChange={e => setEditGender(e.target.value)} className="p-2 border rounded">
-                      <option>Male</option>
-                      <option>Female</option>
-                      <option>Other</option>
-                    </select>
-                  </div>
-                  <div className="flex gap-2 mt-2">
-                    <span className="relative inline-block group">
-                      <button type="submit" title="Save" aria-label="Save" className="px-3 py-1 bg-green-600 text-white rounded flex items-center justify-center">
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                        </svg>
-                      </button>
-                      <span className="pointer-events-none absolute -top-8 left-1/2 transform -translate-x-1/2 whitespace-nowrap bg-black text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition">Save</span>
-                    </span>
-                    <span className="relative inline-block group">
-                      <button type="button" onClick={cancelEdit} title="Cancel" aria-label="Cancel" className="px-3 py-1 bg-gray-200 rounded flex items-center justify-center">
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                      </button>
-                      <span className="pointer-events-none absolute -top-8 left-1/2 transform -translate-x-1/2 whitespace-nowrap bg-black text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition">Cancel</span>
-                    </span>
-                  </div>
-                </form>
+                <div className="w-full">
+                  <CrudForm onSubmit={saveEdit} onCancel={cancelEdit} saveTitle="Save" cancelTitle="Cancel">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                      <input value={editName} onChange={e => setEditName(e.target.value)} className="p-2 border rounded" />
+                      <input value={editSubject} onChange={e => setEditSubject(e.target.value)} className="p-2 border rounded" />
+                      <input value={editAvatar} onChange={e => setEditAvatar(e.target.value)} className="p-2 border rounded" />
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-4 gap-2">
+                      <input value={editSalary} onChange={e => setEditSalary(e.target.value)} className="p-2 border rounded" />
+                      <input type="date" value={editDateOfJoin} onChange={e => setEditDateOfJoin(e.target.value)} className="p-2 border rounded" />
+                      <input value={editMobile} onChange={e => setEditMobile(e.target.value)} className="p-2 border rounded" />
+                      <select value={editGender} onChange={e => setEditGender(e.target.value)} className="p-2 border rounded">
+                        <option>Male</option>
+                        <option>Female</option>
+                        <option>Other</option>
+                      </select>
+                    </div>
+                  </CrudForm>
+                </div>
               ) : (
                 <>
                   <div className="font-medium">{t.name} {t.active === false && <span className="text-xs text-red-500 ml-2">(Deactivated)</span>}</div>
