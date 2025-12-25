@@ -26,6 +26,9 @@ export default function AdminLogin() {
 
   return (
     <>
+      <div className="flex items-center gap-3 mb-4">
+        <button type="button" onClick={() => router.back()} className="px-3 py-1 bg-gray-200 rounded">Back</button>
+      </div>
       <h2 className="text-xl font-semibold">Admin Login</h2>
       <form onSubmit={handleSubmit} className="mt-6 bg-white p-6 rounded-lg shadow">
         {error && <div className="text-sm text-red-600 mb-3">{error}</div>}
