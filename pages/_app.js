@@ -13,6 +13,7 @@ export default function MyApp({ Component, pageProps }) {
     const guards = [
       { prefix: '/admin', key: 'madrassa_admin', login: '/admin/login' },
       { prefix: '/teachers', key: 'madrassa_admin', login: '/admin/login' },
+      { prefix: '/students', key: 'madrassa_admin', login: '/admin/login' },
       { prefix: '/divisions', key: 'madrassa_admin', login: '/admin/login' },
       { prefix: '/teacher', key: 'madrassa_teacher', login: '/teacher/login' },
       { prefix: '/student', key: 'madrassa_student', login: '/student/login' }

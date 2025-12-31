@@ -41,6 +41,7 @@ export default function Sidebar({ open, onClose }) {
       <nav className="px-2 py-4 space-y-1">
           <Link href="/welcome" onClick={() => onClose && onClose()} className="block px-3 py-2 rounded-md text-sm text-gray-700 hover:bg-gray-100">Home</Link>
           <Link href="/teachers" onClick={() => onClose && onClose()} className="block px-3 py-2 rounded-md text-sm text-gray-700 hover:bg-gray-100">Teachers</Link>
+          <Link href="/students" onClick={() => onClose && onClose()} className="block px-3 py-2 rounded-md text-sm text-gray-700 hover:bg-gray-100">Students</Link>
           <Link href="/divisions" onClick={() => onClose && onClose()} className="block px-3 py-2 rounded-md text-sm text-gray-700 hover:bg-gray-100">Divisions</Link>
           <Link href="/subjects" onClick={() => onClose && onClose()} className="block px-3 py-2 rounded-md text-sm text-gray-700 hover:bg-gray-100">Subjects</Link>
           <Link href="/classes" onClick={() => onClose && onClose()} className="block px-3 py-2 rounded-md text-sm text-gray-700 hover:bg-gray-100">Classes</Link>
