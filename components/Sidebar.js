@@ -42,6 +42,7 @@ export default function Sidebar({ open, onClose }) {
           <Link href="/welcome" onClick={() => onClose && onClose()} className="block px-3 py-2 rounded-md text-sm text-gray-700 hover:bg-gray-100">Home</Link>
           <Link href="/teachers" onClick={() => onClose && onClose()} className="block px-3 py-2 rounded-md text-sm text-gray-700 hover:bg-gray-100">Teachers</Link>
           <Link href="/divisions" onClick={() => onClose && onClose()} className="block px-3 py-2 rounded-md text-sm text-gray-700 hover:bg-gray-100">Divisions</Link>
+          <Link href="/subjects" onClick={() => onClose && onClose()} className="block px-3 py-2 rounded-md text-sm text-gray-700 hover:bg-gray-100">Subjects</Link>
           {isAdmin && (
             <Link href="/admin/academic-years" onClick={() => onClose && onClose()} className="block px-3 py-2 rounded-md text-sm text-gray-700 hover:bg-gray-100">Academic Years</Link>
           )}

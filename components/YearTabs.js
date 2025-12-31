@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import Teachers from '../pages/teachers/index'
 import Divisions from '../pages/divisions/index'
+import Subjects from '../pages/subjects/index'
 
 export default function YearTabs({ yearId }) {
   const [tab, setTab] = useState('teachers')
@@ -18,6 +19,7 @@ export default function YearTabs({ yearId }) {
       <div className="mt-4">
         {tab === 'teachers' && <Teachers />}
         {tab === 'divisions' && <Divisions />}
+        {tab === 'subjects' && <Subjects />}
         {tab === 'classes' && <div className="text-gray-500">Classes UI (TODO)</div>}
         {tab === 'students' && <div className="text-gray-500">Students UI (TODO)</div>}
         {tab === 'subjects' && <div className="text-gray-500">Subjects UI (TODO)</div>}
