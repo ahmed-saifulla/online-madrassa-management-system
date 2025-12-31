@@ -4,6 +4,7 @@ import { useRouter } from 'next/router'
 
 export default function Sidebar({ open, onClose }) {
   const [isLoggedIn, setIsLoggedIn] = useState(false)
+  const [isAdmin, setIsAdmin] = useState(false)
   const router = useRouter()
 
   useEffect(() => {
@@ -12,6 +13,7 @@ export default function Sidebar({ open, onClose }) {
     const check = () => {
       const ok = !!(localStorage.getItem('madrassa_admin') || localStorage.getItem('madrassa_teacher') || localStorage.getItem('madrassa_student'))
       setIsLoggedIn(ok)
+      setIsAdmin(!!localStorage.getItem('madrassa_admin'))
     }
 
     check()
@@ -40,7 +42,9 @@ export default function Sidebar({ open, onClose }) {
           <Link href="/welcome" onClick={() => onClose && onClose()} className="block px-3 py-2 rounded-md text-sm text-gray-700 hover:bg-gray-100">Home</Link>
           <Link href="/teachers" onClick={() => onClose && onClose()} className="block px-3 py-2 rounded-md text-sm text-gray-700 hover:bg-gray-100">Teachers</Link>
           <Link href="/divisions" onClick={() => onClose && onClose()} className="block px-3 py-2 rounded-md text-sm text-gray-700 hover:bg-gray-100">Divisions</Link>
-          {/* <Link href="/admin" onClick={() => onClose && onClose()} className="block px-3 py-2 rounded-md text-sm text-gray-700 hover:bg-gray-100">Admin</Link> */}
+          {isAdmin && (
+            <Link href="/admin/academic-years" onClick={() => onClose && onClose()} className="block px-3 py-2 rounded-md text-sm text-gray-700 hover:bg-gray-100">Academic Years</Link>
+          )}
       </nav>
       <div className="mt-auto px-2 py-4">
         <button onClick={handleLogout} className="w-full text-left px-3 py-2 rounded-md text-sm text-red-600 hover:bg-red-50">Logout</button>

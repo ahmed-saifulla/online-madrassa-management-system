@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import Sidebar from './Sidebar'
 import Link from 'next/link'
+import YearSelector from './YearSelector'
 
 export default function Layout({ children }) {
   const [open, setOpen] = useState(false)
@@ -18,11 +19,19 @@ export default function Layout({ children }) {
             </button>
             <Link href="/" className="text-lg font-semibold text-indigo-600">Salsabeel</Link>
             <div className="w-8" />
+            <div className="flex items-center">
+              <YearSelector />
+            </div>
           </div>
         </div>
       </header>
 
       <Sidebar open={open} onClose={() => setOpen(false)} />
+
+      {/* Desktop top-right year selector */}
+      <div className="hidden md:block fixed right-6 top-4 z-50">
+        <YearSelector />
+      </div>
 
       <div className="md:pl-64">
         <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">{children}</main>
