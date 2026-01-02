@@ -2,6 +2,7 @@ import { useState, useMemo, useEffect } from 'react'
 import { teachers } from '../../data/teachers'
 import IconButton from '../../components/IconButton'
 import CrudForm from '../../components/CrudForm'
+import { supabase, hasSupabase } from '../../lib/supabase'
 
 export default function Teachers() {
   const [list, setList] = useState([])
@@ -31,10 +32,11 @@ export default function Teachers() {
     return list.filter(t => (t.name + ' ' + t.subject).toLowerCase().includes(q))
   }, [list, query])
 
-  function handleAdd(e) {
+  async function handleAdd(e) {
     e.preventDefault()
     if (!name.trim()) return
     const newTeacher = {
+      // keep a temporary id for client-side list; Supabase may overwrite with its id
       id: 't' + Date.now(),
       name: name.trim(),
       subject: subject.trim() || '—',
@@ -43,16 +45,32 @@ export default function Teachers() {
       salary: salary.trim() || '0',
       dateOfJoin: dateOfJoin || '',
       mobile: mobile.trim() || '',
-      gender: gender || 'Male'
+      gender: gender || 'Male',
+      active: true
     }
-    newTeacher.active = true
+
+    if (hasSupabase) {
+      try {
+        const { data, error } = await supabase.from('teachers').insert(newTeacher).select().single()
+        if (error) throw error
+        setList(prev => [data, ...prev])
+        finishAdd()
+        return
+      } catch (err) {
+        console.error('Supabase insert failed, falling back to localStorage', err)
+      }
+    }
+
     setList(prev => {
       const updated = [newTeacher, ...prev]
       try { localStorage.setItem('madrassa_teachers', JSON.stringify(updated)) } catch (e) {}
+      try { teachers.unshift(newTeacher) } catch (e) {}
       return updated
     })
-    // also update module export so other pages see it during this session
-    try { teachers.unshift(newTeacher) } catch (e) {}
+    finishAdd()
+  }
+
+  function finishAdd() {
     setName('')
     setSubject('')
     setAvatar('')
@@ -68,9 +86,24 @@ export default function Teachers() {
     try { localStorage.setItem('madrassa_teachers', JSON.stringify(updated)) } catch (e) {}
   }
 
-  function handleToggleActive(id) {
+  async function handleToggleActive(id) {
+    const cur = list.find(t => t.id === id)
+    if (!cur) return
+    const newActive = !(cur.active === false)
+
+    if (hasSupabase) {
+      try {
+        const { data, error } = await supabase.from('teachers').update({ active: newActive }).eq('id', id).select().single()
+        if (error) throw error
+        setList(prev => prev.map(t => t.id === id ? data : t))
+        return
+      } catch (err) {
+        console.error('Supabase update failed, falling back to localStorage', err)
+      }
+    }
+
     setList(prev => {
-      const updated = prev.map(t => t.id === id ? { ...t, active: !t.active } : t)
+      const updated = prev.map(t => t.id === id ? { ...t, active: newActive } : t)
       saveToStorage(updated)
       try {
         const idx = teachers.findIndex(x => x.id === id)
@@ -99,44 +132,85 @@ export default function Teachers() {
   function saveEdit(e) {
     e.preventDefault()
     if (!editingId) return
-    setList(prev => {
-      const updated = prev.map(t => {
-        if (t.id !== editingId) return t
-        return {
-          ...t,
-          name: editName.trim() || t.name,
-          subject: editSubject.trim() || t.subject,
-          avatar: editAvatar.trim() || t.avatar,
-          email: editEmail.trim() || t.email || '',
-          salary: editSalary.trim() || t.salary,
-          dateOfJoin: editDateOfJoin || t.dateOfJoin,
-          mobile: editMobile.trim() || t.mobile,
-          gender: editGender || t.gender
+
+    const updates = {
+      name: editName.trim(),
+      subject: editSubject.trim(),
+      avatar: editAvatar.trim(),
+      email: editEmail.trim(),
+      salary: editSalary.trim(),
+      dateOfJoin: editDateOfJoin,
+      mobile: editMobile.trim(),
+      gender: editGender
+    }
+
+    if (hasSupabase) {
+      ;(async () => {
+        try {
+          const { data, error } = await supabase.from('teachers').update(updates).eq('id', editingId).select().single()
+          if (error) throw error
+          setList(prev => prev.map(t => t.id === editingId ? data : t))
+        } catch (err) {
+          console.error('Supabase update failed, falling back to localStorage', err)
+          setList(prev => {
+            const updated = prev.map(t => t.id !== editingId ? t : { ...t, ...updates })
+            saveToStorage(updated)
+            try {
+              updated.forEach(u => {
+                const idx = teachers.findIndex(x => x.id === u.id)
+                if (idx >= 0) teachers[idx] = { ...teachers[idx], ...u }
+              })
+            } catch (e) {}
+            return updated
+          })
         }
+      })()
+    } else {
+      setList(prev => {
+        const updated = prev.map(t => t.id !== editingId ? t : { ...t, ...updates })
+        saveToStorage(updated)
+        try {
+          updated.forEach(u => {
+            const idx = teachers.findIndex(x => x.id === u.id)
+            if (idx >= 0) teachers[idx] = { ...teachers[idx], ...u }
+          })
+        } catch (e) {}
+        return updated
       })
-      saveToStorage(updated)
-      try {
-        updated.forEach(u => {
-          const idx = teachers.findIndex(x => x.id === u.id)
-          if (idx >= 0) teachers[idx] = { ...teachers[idx], ...u }
-        })
-      } catch (e) {}
-      return updated
-    })
+    }
+
     setEditingId(null)
   }
 
   useEffect(() => {
     if (typeof window === 'undefined') return
-    try {
-      const raw = localStorage.getItem('madrassa_teachers')
-      if (raw) {
-        setList(JSON.parse(raw))
-        return
+
+    const load = async () => {
+      if (hasSupabase) {
+        try {
+          const { data, error } = await supabase.from('teachers').select('*')
+          if (!error && data) {
+            setList(data)
+            return
+          }
+        } catch (err) {
+          console.error('Supabase fetch failed, falling back to localStorage', err)
+        }
       }
-    } catch (e) {}
-    // fallback to bundled data
-    setList(teachers.slice())
+
+      try {
+        const raw = localStorage.getItem('madrassa_teachers')
+        if (raw) {
+          setList(JSON.parse(raw))
+          return
+        }
+      } catch (e) {}
+
+      // fallback to bundled data
+      setList(teachers.slice())
+    }
+
+    load()
   }, [])
 
   return (
