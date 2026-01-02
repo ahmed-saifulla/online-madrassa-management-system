@@ -10,6 +10,7 @@ export default function Teachers() {
   const [name, setName] = useState('')
   const [subject, setSubject] = useState('')
   const [avatar, setAvatar] = useState('')
+  const [email, setEmail] = useState('')
   const [salary, setSalary] = useState('')
   const [dateOfJoin, setDateOfJoin] = useState('')
   const [mobile, setMobile] = useState('')
@@ -18,6 +19,7 @@ export default function Teachers() {
   const [editName, setEditName] = useState('')
   const [editSubject, setEditSubject] = useState('')
   const [editAvatar, setEditAvatar] = useState('')
+  const [editEmail, setEditEmail] = useState('')
   const [editSalary, setEditSalary] = useState('')
   const [editDateOfJoin, setEditDateOfJoin] = useState('')
   const [editMobile, setEditMobile] = useState('')
@@ -37,6 +39,7 @@ export default function Teachers() {
       name: name.trim(),
       subject: subject.trim() || '—',
       avatar: avatar.trim() || `https://i.pravatar.cc/150?u=${Date.now()}`,
+      email: email.trim() || '',
       salary: salary.trim() || '0',
       dateOfJoin: dateOfJoin || '',
       mobile: mobile.trim() || '',
@@ -53,6 +56,7 @@ export default function Teachers() {
     setName('')
     setSubject('')
     setAvatar('')
+    setEmail('')
     setSalary('')
     setDateOfJoin('')
     setMobile('')
@@ -81,6 +85,7 @@ export default function Teachers() {
     setEditName(t.name)
     setEditSubject(t.subject)
     setEditAvatar(t.avatar)
+    setEditEmail(t.email || '')
     setEditSalary(t.salary || '')
     setEditDateOfJoin(t.dateOfJoin || '')
     setEditMobile(t.mobile || '')
@@ -102,6 +107,7 @@ export default function Teachers() {
           name: editName.trim() || t.name,
           subject: editSubject.trim() || t.subject,
           avatar: editAvatar.trim() || t.avatar,
+          email: editEmail.trim() || t.email || '',
           salary: editSalary.trim() || t.salary,
           dateOfJoin: editDateOfJoin || t.dateOfJoin,
           mobile: editMobile.trim() || t.mobile,
@@ -156,10 +162,11 @@ export default function Teachers() {
       {showForm && (
         <div className="mt-4 bg-white p-4 rounded shadow">
           <CrudForm onSubmit={handleAdd} onCancel={() => setShowForm(false)} saveTitle="Add" cancelTitle="Cancel">
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
               <input value={name} onChange={e => setName(e.target.value)} placeholder="Name" className="p-2 border rounded" />
               <input value={subject} onChange={e => setSubject(e.target.value)} placeholder="Subject" className="p-2 border rounded" />
               <input value={avatar} onChange={e => setAvatar(e.target.value)} placeholder="Avatar URL (optional)" className="p-2 border rounded" />
+              <input value={email} onChange={e => setEmail(e.target.value)} placeholder="Email (optional)" className="p-2 border rounded" />
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 mt-3">
               <input value={salary} onChange={e => setSalary(e.target.value)} placeholder="Salary" className="p-2 border rounded" />
@@ -183,10 +190,11 @@ export default function Teachers() {
               {editingId === t.id ? (
                 <div className="w-full">
                   <CrudForm onSubmit={saveEdit} onCancel={cancelEdit} saveTitle="Save" cancelTitle="Cancel">
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                    <div className="grid grid-cols-1 sm:grid-cols-4 gap-2">
                       <input value={editName} onChange={e => setEditName(e.target.value)} className="p-2 border rounded" />
                       <input value={editSubject} onChange={e => setEditSubject(e.target.value)} className="p-2 border rounded" />
                       <input value={editAvatar} onChange={e => setEditAvatar(e.target.value)} className="p-2 border rounded" />
+                      <input value={editEmail} onChange={e => setEditEmail(e.target.value)} className="p-2 border rounded" />
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-4 gap-2">
                       <input value={editSalary} onChange={e => setEditSalary(e.target.value)} className="p-2 border rounded" />
@@ -203,7 +211,7 @@ export default function Teachers() {
               ) : (
                 <>
                   <div className="font-medium">{t.name} {t.active === false && <span className="text-xs text-red-500 ml-2">(Deactivated)</span>}</div>
-                  <div className="text-sm text-gray-500">{t.subject}</div>
+                  <div className="text-sm text-gray-500">{t.subject} {t.email && <span className="ml-2 text-sm text-gray-400">• {t.email}</span>}</div>
                   <div className="text-xs text-gray-400 mt-1">{t.gender} • {t.mobile} • Joined {t.dateOfJoin || '—'} • Salary {t.salary || '—'}</div>
                 </>
               )}
