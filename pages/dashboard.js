@@ -1,14 +1,16 @@
 import { useEffect } from 'react'
 import { useRouter } from 'next/router'
-import Dashboard from '../../components/Dashboard'
+import Dashboard from '../components/Dashboard'
 
-export default function AdminIndex() {
+export default function DashboardPage() {
   const router = useRouter()
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      const ok = localStorage.getItem('madrassa_admin')
-      if (!ok) router.replace('/admin/login')
+      const isAdminLoggedIn = !!localStorage.getItem('madrassa_admin')
+      if (!isAdminLoggedIn) {
+        router.replace('/admin/login')
+      }
     }
   }, [])
 
@@ -22,8 +24,8 @@ export default function AdminIndex() {
     <>
       <div className="flex justify-between items-center mb-8">
         <div>
-          <h1 className="text-3xl font-bold text-gray-800">Admin Dashboard</h1>
-          <p className="text-gray-600 mt-1">Welcome back! Here's your institution overview.</p>
+          <h1 className="text-3xl font-bold text-gray-800">Dashboard</h1>
+          <p className="text-gray-600 mt-1">Institution management overview</p>
         </div>
         <button onClick={handleLogout} className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors">Logout</button>
       </div>

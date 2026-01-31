@@ -1,19 +1,35 @@
-import { useState, useEffect } from 'react'
+import { useEffect } from 'react'
+import { useRouter } from 'next/router'
+import Dashboard from '../components/Dashboard'
 
 export default function Welcome() {
-  const [role, setRole] = useState('Guest')
+  const router = useRouter()
 
   useEffect(() => {
-    if (typeof window === 'undefined') return
-    if (localStorage.getItem('madrassa_admin')) setRole('Admin')
-    else if (localStorage.getItem('madrassa_teacher')) setRole('Teacher')
-    else if (localStorage.getItem('madrassa_student')) setRole('Student')
+    if (typeof window !== 'undefined') {
+      const isAdminLoggedIn = !!localStorage.getItem('madrassa_admin')
+      if (!isAdminLoggedIn) {
+        router.replace('/admin/login')
+      }
+    }
   }, [])
+
+  const handleLogout = () => {
+    localStorage.removeItem('madrassa_admin')
+    if (typeof window !== 'undefined') window.dispatchEvent(new Event('madrassa_auth_changed'))
+    router.push('/')
+  }
 
   return (
     <>
-      <h1 className="text-2xl font-semibold">Welcome, {role}</h1>
-      <p className="mt-4 text-gray-600">You are logged in. Use the navigation to explore the application.</p>
+      <div className="flex justify-between items-center mb-8">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-800">Dashboard</h1>
+          <p className="text-gray-600 mt-1">Institution management overview</p>
+        </div>
+        <button onClick={handleLogout} className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors">Logout</button>
+      </div>
+      <Dashboard />
     </>
   )
 }
