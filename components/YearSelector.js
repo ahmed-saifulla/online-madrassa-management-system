@@ -5,7 +5,7 @@ export default function YearSelector() {
   const [years, setYears] = useState([])
   const [selected, setSelected] = useState('')
 
-  useEffect(() => {
+  const loadYears = () => {
     try {
       const raw = localStorage.getItem('madrassa_academic_years')
       const arr = raw ? JSON.parse(raw) : []
@@ -17,6 +17,18 @@ export default function YearSelector() {
         localStorage.setItem('madrassa_active_year', arr[0].id)
       }
     } catch (e) { setYears([]) }
+  }
+
+  useEffect(() => {
+    loadYears()
+    
+    // Listen for year changes
+    const handleYearChange = () => {
+      loadYears()
+    }
+    
+    window.addEventListener('madrassa_year_changed', handleYearChange)
+    return () => window.removeEventListener('madrassa_year_changed', handleYearChange)
   }, [])
 
   function change(v) {
