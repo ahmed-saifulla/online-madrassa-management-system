@@ -9,7 +9,6 @@ export default function Teachers() {
   const [query, setQuery] = useState('')
   const [showForm, setShowForm] = useState(false)
   const [name, setName] = useState('')
-  const [subject, setSubject] = useState('')
   const [avatar, setAvatar] = useState('')
   const [email, setEmail] = useState('')
   const [salary, setSalary] = useState('')
@@ -18,7 +17,6 @@ export default function Teachers() {
   const [gender, setGender] = useState('Male')
   const [editingId, setEditingId] = useState(null)
   const [editName, setEditName] = useState('')
-  const [editSubject, setEditSubject] = useState('')
   const [editAvatar, setEditAvatar] = useState('')
   const [editEmail, setEditEmail] = useState('')
   const [editSalary, setEditSalary] = useState('')
@@ -29,8 +27,26 @@ export default function Teachers() {
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase()
     if (!q) return list
-    return list.filter(t => (t.name + ' ' + t.subject).toLowerCase().includes(q))
+    return list.filter(t => (t.name).toLowerCase().includes(q))
   }, [list, query])
+
+  function readFileAsDataURL(file, cb) {
+    const reader = new FileReader()
+    reader.onload = (e) => cb(e.target.result)
+    reader.readAsDataURL(file)
+  }
+
+  function handleAvatarChange(e) {
+    const f = e.target.files && e.target.files[0]
+    if (!f) return setAvatar('')
+    readFileAsDataURL(f, data => setAvatar(data))
+  }
+
+  function handleEditAvatarChange(e) {
+    const f = e.target.files && e.target.files[0]
+    if (!f) return
+    readFileAsDataURL(f, data => setEditAvatar(data))
+  }
 
   async function handleAdd(e) {
     e.preventDefault()
@@ -39,7 +55,6 @@ export default function Teachers() {
       // keep a temporary id for client-side list; Supabase may overwrite with its id
       id: 't' + Date.now(),
       name: name.trim(),
-      subject: subject.trim() || '—',
       avatar: avatar.trim() || `https://i.pravatar.cc/150?u=${Date.now()}`,
       email: email.trim() || '',
       salary: salary.trim() || '0',
@@ -72,7 +87,6 @@ export default function Teachers() {
 
   function finishAdd() {
     setName('')
-    setSubject('')
     setAvatar('')
     setEmail('')
     setSalary('')
@@ -87,6 +101,7 @@ export default function Teachers() {
   }
 
   async function handleToggleActive(id) {
+    console.log('handleToggleActive called for', id)
     const cur = list.find(t => t.id === id)
     if (!cur) return
     const newActive = !(cur.active === false)
@@ -116,7 +131,6 @@ export default function Teachers() {
   function startEdit(t) {
     setEditingId(t.id)
     setEditName(t.name)
-    setEditSubject(t.subject)
     setEditAvatar(t.avatar)
     setEditEmail(t.email || '')
     setEditSalary(t.salary || '')
@@ -135,7 +149,6 @@ export default function Teachers() {
 
     const updates = {
       name: editName.trim(),
-      subject: editSubject.trim(),
       avatar: editAvatar.trim(),
       email: editEmail.trim(),
       salary: editSalary.trim(),
@@ -237,26 +250,46 @@ export default function Teachers() {
         <div className="mt-4 bg-white p-4 rounded shadow">
           <CrudForm onSubmit={handleAdd} onCancel={() => setShowForm(false)} saveTitle="Add" cancelTitle="Cancel">
             <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
-              <input value={name} onChange={e => setName(e.target.value)} placeholder="Name" className="p-2 border rounded" />
-              <input value={subject} onChange={e => setSubject(e.target.value)} placeholder="Subject" className="p-2 border rounded" />
-              <input value={avatar} onChange={e => setAvatar(e.target.value)} placeholder="Avatar URL (optional)" className="p-2 border rounded" />
-              <input value={email} onChange={e => setEmail(e.target.value)} placeholder="Email (optional)" className="p-2 border rounded" />
+              <div>
+                <label className="text-sm font-medium mb-1 block">Name</label>
+                <input value={name} onChange={e => setName(e.target.value)} placeholder="Name" className="p-2 border rounded w-full" />
+              </div>
+              <div>
+                <label className="text-sm font-medium mb-1 block">Photo</label>
+                <input type="file" accept="image/*" onChange={handleAvatarChange} className="p-2 w-full" />
+              </div>
+              <div>
+                <label className="text-sm font-medium mb-1 block">Email</label>
+                <input value={email} onChange={e => setEmail(e.target.value)} placeholder="Email (optional)" className="p-2 border rounded w-full" />
+              </div>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 mt-3">
-              <input value={salary} onChange={e => setSalary(e.target.value)} placeholder="Salary" className="p-2 border rounded" />
-              <input type="date" value={dateOfJoin} onChange={e => setDateOfJoin(e.target.value)} className="p-2 border rounded" />
-              <input value={mobile} onChange={e => setMobile(e.target.value)} placeholder="Mobile" className="p-2 border rounded" />
-              <select value={gender} onChange={e => setGender(e.target.value)} className="p-2 border rounded">
-                <option>Male</option>
-                <option>Female</option>
-                <option>Other</option>
-              </select>
+              <div>
+                <label className="text-sm font-medium mb-1 block">Salary</label>
+                <input value={salary} onChange={e => setSalary(e.target.value)} placeholder="Salary" className="p-2 border rounded w-full" />
+              </div>
+              <div>
+                <label className="text-sm font-medium mb-1 block">Date of Join</label>
+                <input type="date" value={dateOfJoin} onChange={e => setDateOfJoin(e.target.value)} className="p-2 border rounded w-full" />
+              </div>
+              <div>
+                <label className="text-sm font-medium mb-1 block">Mobile</label>
+                <input value={mobile} onChange={e => setMobile(e.target.value)} placeholder="Mobile" className="p-2 border rounded w-full" />
+              </div>
+              <div>
+                <label className="text-sm font-medium mb-1 block">Gender</label>
+                <select value={gender} onChange={e => setGender(e.target.value)} className="p-2 border rounded w-full">
+                  <option>Male</option>
+                  <option>Female</option>
+                  <option>Other</option>
+                </select>
+              </div>
             </div>
           </CrudForm>
         </div>
       )}
 
-      <div className="mt-4 grid gap-4 sm:grid-cols-2">
+      <div className="mt-4 grid gap-4 grid-cols-1">
         {filtered.map(t => (
           <div key={t.id} className={`bg-white shadow rounded-lg p-4 flex items-center space-x-4 ${t.active === false ? 'opacity-60' : ''}`}>
             <img src={t.avatar} alt={t.name} className="h-14 w-14 rounded-full object-cover" />
@@ -264,37 +297,58 @@ export default function Teachers() {
               {editingId === t.id ? (
                 <div className="w-full">
                   <CrudForm onSubmit={saveEdit} onCancel={cancelEdit} saveTitle="Save" cancelTitle="Cancel">
-                    <div className="grid grid-cols-1 sm:grid-cols-4 gap-2">
-                      <input value={editName} onChange={e => setEditName(e.target.value)} className="p-2 border rounded" />
-                      <input value={editSubject} onChange={e => setEditSubject(e.target.value)} className="p-2 border rounded" />
-                      <input value={editAvatar} onChange={e => setEditAvatar(e.target.value)} className="p-2 border rounded" />
-                      <input value={editEmail} onChange={e => setEditEmail(e.target.value)} className="p-2 border rounded" />
-                    </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-4 gap-2">
-                      <input value={editSalary} onChange={e => setEditSalary(e.target.value)} className="p-2 border rounded" />
-                      <input type="date" value={editDateOfJoin} onChange={e => setEditDateOfJoin(e.target.value)} className="p-2 border rounded" />
-                      <input value={editMobile} onChange={e => setEditMobile(e.target.value)} className="p-2 border rounded" />
-                      <select value={editGender} onChange={e => setEditGender(e.target.value)} className="p-2 border rounded">
-                        <option>Male</option>
-                        <option>Female</option>
-                        <option>Other</option>
-                      </select>
-                    </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-4 gap-2">
+                        <div>
+                          <label className="text-sm font-medium mb-1 block">Name</label>
+                          <input value={editName} onChange={e => setEditName(e.target.value)} className="p-2 border rounded w-full" />
+                        </div>
+                        
+                        <div>
+                          <label className="text-sm font-medium mb-1 block">Photo</label>
+                          <input type="file" accept="image/*" onChange={handleEditAvatarChange} className="p-2 w-full" />
+                        </div>
+                        <div>
+                          <label className="text-sm font-medium mb-1 block">Email</label>
+                          <input value={editEmail} onChange={e => setEditEmail(e.target.value)} className="p-2 border rounded w-full" />
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-4 gap-2">
+                        <div>
+                          <label className="text-sm font-medium mb-1 block">Salary</label>
+                          <input value={editSalary} onChange={e => setEditSalary(e.target.value)} className="p-2 border rounded w-full" />
+                        </div>
+                        <div>
+                          <label className="text-sm font-medium mb-1 block">Date of Join</label>
+                          <input type="date" value={editDateOfJoin} onChange={e => setEditDateOfJoin(e.target.value)} className="p-2 border rounded w-full" />
+                        </div>
+                        <div>
+                          <label className="text-sm font-medium mb-1 block">Mobile</label>
+                          <input value={editMobile} onChange={e => setEditMobile(e.target.value)} className="p-2 border rounded w-full" />
+                        </div>
+                        <div>
+                          <label className="text-sm font-medium mb-1 block">Gender</label>
+                          <select value={editGender} onChange={e => setEditGender(e.target.value)} className="p-2 border rounded w-full">
+                            <option>Male</option>
+                            <option>Female</option>
+                            <option>Other</option>
+                          </select>
+                        </div>
+                      </div>
                   </CrudForm>
                 </div>
               ) : (
                 <>
                   <div className="font-medium">{t.name} {t.active === false && <span className="text-xs text-red-500 ml-2">(Deactivated)</span>}</div>
-                  <div className="text-sm text-gray-500">{t.subject} {t.email && <span className="ml-2 text-sm text-gray-400">• {t.email}</span>}</div>
+                  <div className="text-sm text-gray-500">{t.email && <span className="ml-2 text-sm text-gray-400">• {t.email}</span>}</div>
                   <div className="text-xs text-gray-400 mt-1">{t.gender} • {t.mobile} • Joined {t.dateOfJoin || '—'} • Salary {t.salary || '—'}</div>
                 </>
               )}
             </div>
-            <div className="flex flex-col gap-2">
+            <div className="flex items-center gap-2">
               {editingId !== t.id && (
                 <>
                   <span className="relative inline-block group">
-                    <button onClick={() => startEdit(t)} title="Edit" aria-label="Edit" className="px-3 py-1 bg-blue-600 text-white rounded flex items-center justify-center">
+                    <button type="button" onClick={() => startEdit(t)} title="Edit" aria-label="Edit" className="px-3 py-1 bg-blue-600 text-white rounded flex items-center justify-center">
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5h6M4 21l7-7 3 3 7-7" />
                       </svg>
@@ -302,7 +356,7 @@ export default function Teachers() {
                     <span className="pointer-events-none absolute -top-8 left-1/2 transform -translate-x-1/2 whitespace-nowrap bg-black text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition">Edit</span>
                   </span>
                   <span className="relative inline-block group">
-                    <button onClick={() => handleToggleActive(t.id)} title={t.active === false ? 'Activate' : 'Deactivate'} aria-label={t.active === false ? 'Activate' : 'Deactivate'} className={`px-3 py-1 rounded flex items-center justify-center ${t.active === false ? 'bg-green-500 text-white' : 'bg-red-500 text-white'}`}>
+                    <button type="button" onClick={() => handleToggleActive(t.id)} title={t.active === false ? 'Activate' : 'Deactivate'} aria-label={t.active === false ? 'Activate' : 'Deactivate'} className={`px-3 py-1 rounded flex items-center justify-center ${t.active === false ? 'bg-green-500 text-white' : 'bg-red-500 text-white'}`}>
                       {t.active === false ? (
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
