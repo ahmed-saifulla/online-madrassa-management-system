@@ -184,20 +184,20 @@ export default function Dashboard() {
             <div className="text-sm opacity-90">View all subjects</div>
           </button>
           <button
-            onClick={() => router.push('/divisions')}
-            className="bg-gradient-to-r from-red-500 to-red-600 text-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow"
-          >
-            <div className="text-2xl mb-2">📋</div>
-            <div className="font-semibold">Divisions</div>
-            <div className="text-sm opacity-90">Manage divisions</div>
-          </button>
-          <button
             onClick={() => router.push('/admin/academic-years')}
             className="bg-gradient-to-r from-indigo-500 to-indigo-600 text-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow"
           >
             <div className="text-2xl mb-2">📅</div>
             <div className="font-semibold">Academic Years</div>
             <div className="text-sm opacity-90">Manage years</div>
+          </button>
+          <button
+            onClick={() => router.push('/divisions')}
+            className="bg-gradient-to-r from-red-500 to-red-600 text-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow"
+          >
+            <div className="text-2xl mb-2">📋</div>
+            <div className="font-semibold">Divisions</div>
+            <div className="text-sm opacity-90">Manage divisions</div>
           </button>
         </div>
       </div>

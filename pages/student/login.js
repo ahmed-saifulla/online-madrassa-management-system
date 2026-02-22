@@ -15,13 +15,8 @@ export default function StudentLogin() {
 
   const handleSubmit = (e) => {
     e.preventDefault()
-    if (username === 'student10' && password === 'pass10') {
-      localStorage.setItem('madrassa_student', '1')
-      if (typeof window !== 'undefined') window.dispatchEvent(new Event('madrassa_auth_changed'))
-      router.push('/welcome')
-    } else {
-      setError('Invalid student credentials')
-    }
+    // Login is disabled for students
+    setError('Student login is currently disabled. Please contact administrator.')
   }
 
   return (
@@ -30,21 +25,24 @@ export default function StudentLogin() {
         <button type="button" onClick={() => router.back()} className="px-3 py-1 bg-gray-200 rounded">Back</button>
       </div>
       <h2 className="text-xl font-semibold">Student Login</h2>
+      <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded">
+        <p className="text-yellow-800">Student logins are temporarily disabled. Please contact the administrator for access.</p>
+      </div>
       <form onSubmit={handleSubmit} className="mt-6 bg-white p-6 rounded-lg shadow">
         {error && <div className="text-sm text-red-600 mb-3">{error}</div>}
         <label className="block">
           <span className="text-sm text-gray-700">Username</span>
-          <input value={username} onChange={e => setUsername(e.target.value)} className="mt-1 block w-full rounded-md border-gray-200 shadow-sm focus:ring-indigo-500 focus:border-indigo-500" placeholder="student10" />
+          <input disabled value={username} onChange={e => setUsername(e.target.value)} className="mt-1 block w-full rounded-md border-gray-200 shadow-sm bg-gray-100" placeholder="student10" />
         </label>
 
         <label className="block mt-4">
           <span className="text-sm text-gray-700">Password</span>
-          <input type="password" value={password} onChange={e => setPassword(e.target.value)} className="mt-1 block w-full rounded-md border-gray-200 shadow-sm focus:ring-indigo-500 focus:border-indigo-500" placeholder="pass10" />
+          <input disabled type="password" value={password} onChange={e => setPassword(e.target.value)} className="mt-1 block w-full rounded-md border-gray-200 shadow-sm bg-gray-100" placeholder="pass10" />
         </label>
 
         <div className="mt-6 flex items-center justify-between">
-          <button type="submit" className="px-4 py-2 bg-green-600 text-white rounded-md">Sign in</button>
-          <div className="text-sm text-gray-500">Use username `student10` and password `pass10`</div>
+          <button disabled type="submit" className="px-4 py-2 bg-green-300 text-white rounded-md">Sign in</button>
+          <div className="text-sm text-gray-500">Student login disabled</div>
         </div>
       </form>
     </>
