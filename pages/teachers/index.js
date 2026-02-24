@@ -4,26 +4,6 @@ import IconButton from '../../components/IconButton'
 import CrudForm from '../../components/CrudForm'
 import { supabase, hasSupabase } from '../../lib/supabase';
 
-async function fetchTeachersFromFunction(setList) {
-  try {
-    const { data, error } = await supabase.functions.invoke('get-teachers', { body: JSON.stringify({}) })
-    if (!error && data) {
-      // handle different possible shapes returned by the function
-      if (Array.isArray(data)) {
-        setList(data)
-        return true
-      }
-      if (Array.isArray(data.data)) {
-        setList(data.data)
-        return true
-      }
-    }
-    return false
-  } catch (err) {
-    console.error('Function invocation failed:', err)
-    return false
-  }
-}
 
 export default function Teachers() {
   const [list, setList] = useState([])
@@ -220,11 +200,6 @@ export default function Teachers() {
     if (typeof window === 'undefined') return
 
     const load = async () => {
-      // Try fetching via Supabase Edge Function first
-      try {
-        const ok = await fetchTeachersFromFunction(setList)
-        if (ok) return
-      } catch (e) {}
       if (hasSupabase) {
         try {
           const { data, error } = await supabase.from('teachers').select('*')
