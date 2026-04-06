@@ -2,7 +2,7 @@ import { useState, useMemo, useEffect } from 'react'
 import { teachers } from '../../data/teachers'
 import IconButton from '../../components/IconButton'
 import CrudForm from '../../components/CrudForm'
-import { supabase, hasSupabase } from '../../lib/supabase';
+import { TeachersAPI } from '../../lib/api';
 
 
 export default function Teachers() {
@@ -10,25 +10,33 @@ export default function Teachers() {
   const [query, setQuery] = useState('')
   const [showForm, setShowForm] = useState(false)
   const [name, setName] = useState('')
+  const [firstName, setFirstName] = useState('')
+  const [lastName, setLastName] = useState('')
   const [avatar, setAvatar] = useState('')
   const [email, setEmail] = useState('')
-  const [salary, setSalary] = useState('')
-  const [dateOfJoin, setDateOfJoin] = useState('')
-  const [mobile, setMobile] = useState('')
-  const [gender, setGender] = useState('Male')
+  const [phone, setPhone] = useState('')
+  const [qualification, setQualification] = useState('')
+  const [specialization, setSpecialization] = useState('')
+  const [joiningDate, setJoiningDate] = useState('')
+  const [employeeId, setEmployeeId] = useState('')
   const [editingId, setEditingId] = useState(null)
-  const [editName, setEditName] = useState('')
+  const [editFirstName, setEditFirstName] = useState('')
+  const [editLastName, setEditLastName] = useState('')
   const [editAvatar, setEditAvatar] = useState('')
   const [editEmail, setEditEmail] = useState('')
-  const [editSalary, setEditSalary] = useState('')
-  const [editDateOfJoin, setEditDateOfJoin] = useState('')
-  const [editMobile, setEditMobile] = useState('')
+  const [editPhone, setEditPhone] = useState('')
+  const [editQualification, setEditQualification] = useState('')
+  const [editSpecialization, setEditSpecialization] = useState('')
+  const [editJoiningDate, setEditJoiningDate] = useState('')
+  const [editEmployeeId, setEditEmployeeId] = useState('')
   const [editGender, setEditGender] = useState('Male')
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase()
     if (!q) return list
-    return list.filter(t => (t.name).toLowerCase().includes(q))
+    console.log('list ', list);
+    
+    return list.filter(t => `${t.first_name} ${t.last_name}`.toLowerCase().includes(q))
   }, [list, query])
 
   function readFileAsDataURL(file, cb) {
@@ -51,48 +59,48 @@ export default function Teachers() {
 
   async function handleAdd(e) {
     e.preventDefault()
-    if (!name.trim()) return
+    if (!firstName.trim() || !lastName.trim()) return
     const newTeacher = {
       // keep a temporary id for client-side list; Supabase may overwrite with its id
       id: 't' + Date.now(),
-      name: name.trim(),
-      avatar: avatar.trim() || `https://i.pravatar.cc/150?u=${Date.now()}`,
-      email: email.trim() || '',
-      salary: salary.trim() || '0',
-      dateOfJoin: dateOfJoin || '',
-      mobile: mobile.trim() || '',
-      gender: gender || 'Male',
-      active: true
+      employee_id: employeeId.trim() || `EMP${Date.now()}`,
+      first_name: firstName.trim(),
+      last_name: lastName.trim(),
+      gender: gender || 'MALE',
+      phone: phone.trim() || '',
+      qualification: qualification.trim() || '',
+      specialization: specialization.trim() || '',
+      joining_date: joiningDate || '',
+      is_active: true
     }
 
-    if (hasSupabase) {
-      try {
-        const { data, error } = await supabase.from('teachers').insert(newTeacher).select().single()
-        if (error) throw error
-        setList(prev => [data, ...prev])
-        finishAdd()
-        return
-      } catch (err) {
-        console.error('Supabase insert failed, falling back to localStorage', err)
-      }
+    try {
+      const data = await TeachersAPI.create(newTeacher);
+      setList(prev => [data, ...prev]);
+      finishAdd();
+      return;
+    } catch (err) {
+      console.error('API insert failed, falling back to localStorage', err);
+      setList(prev => {
+        const updated = [newTeacher, ...prev];
+        try { localStorage.setItem('madrassa_teachers', JSON.stringify(updated)); } catch (e) {}
+        try { teachers.unshift(newTeacher); } catch (e) {}
+        return updated;
+      });
+      finishAdd();
     }
-
-    setList(prev => {
-      const updated = [newTeacher, ...prev]
-      try { localStorage.setItem('madrassa_teachers', JSON.stringify(updated)) } catch (e) {}
-      try { teachers.unshift(newTeacher) } catch (e) {}
-      return updated
-    })
-    finishAdd()
   }
 
   function finishAdd() {
-    setName('')
+    setFirstName('')
+    setLastName('')
     setAvatar('')
     setEmail('')
-    setSalary('')
-    setDateOfJoin('')
-    setMobile('')
+    setPhone('')
+    setQualification('')
+    setSpecialization('')
+    setJoiningDate('')
+    setEmployeeId('')
     setGender('Male')
     setShowForm(false)
   }
@@ -105,38 +113,36 @@ export default function Teachers() {
     console.log('handleToggleActive called for', id)
     const cur = list.find(t => t.id === id)
     if (!cur) return
-    const newActive = !(cur.active === false)
+    const newActive = !(cur.is_active === false)
 
-    if (hasSupabase) {
-      try {
-        const { data, error } = await supabase.from('teachers').update({ active: newActive }).eq('id', id).select().single()
-        if (error) throw error
-        setList(prev => prev.map(t => t.id === id ? data : t))
-        return
-      } catch (err) {
-        console.error('Supabase update failed, falling back to localStorage', err)
-      }
+    try {
+      const data = await TeachersAPI.setActive(id, newActive);
+      setList(prev => prev.map(t => t.id === id ? { ...t, is_active: data.is_active } : t));
+    } catch (err) {
+      console.error('API update failed, falling back to localStorage', err);
+      setList(prev => {
+        const updated = prev.map(t => t.id === id ? { ...t, is_active: newActive } : t);
+        saveToStorage(updated);
+        try {
+          const idx = teachers.findIndex(x => x.id === id);
+          if (idx >= 0) teachers[idx].is_active = updated.find(x => x.id === id).is_active;
+        } catch (e) {}
+        return updated;
+      });
     }
-
-    setList(prev => {
-      const updated = prev.map(t => t.id === id ? { ...t, active: newActive } : t)
-      saveToStorage(updated)
-      try {
-        const idx = teachers.findIndex(x => x.id === id)
-        if (idx >= 0) teachers[idx].active = updated.find(x => x.id === id).active
-      } catch (e) {}
-      return updated
-    })
   }
 
   function startEdit(t) {
     setEditingId(t.id)
-    setEditName(t.name)
-    setEditAvatar(t.avatar)
+    setEditFirstName(t.first_name)
+    setEditLastName(t.last_name)
+    setEditAvatar(t.avatar || '')
     setEditEmail(t.email || '')
-    setEditSalary(t.salary || '')
-    setEditDateOfJoin(t.dateOfJoin || '')
-    setEditMobile(t.mobile || '')
+    setEditPhone(t.phone || '')
+    setEditQualification(t.qualification || '')
+    setEditSpecialization(t.specialization || '')
+    setEditJoiningDate(t.joining_date || '')
+    setEditEmployeeId(t.employee_id || '')
     setEditGender(t.gender || 'Male')
   }
 
@@ -149,83 +155,66 @@ export default function Teachers() {
     if (!editingId) return
 
     const updates = {
-      name: editName.trim(),
+      first_name: editFirstName.trim(),
+      last_name: editLastName.trim(),
       avatar: editAvatar.trim(),
       email: editEmail.trim(),
-      salary: editSalary.trim(),
-      dateOfJoin: editDateOfJoin,
-      mobile: editMobile.trim(),
+      phone: editPhone.trim(),
+      qualification: editQualification.trim(),
+      specialization: editSpecialization.trim(),
+      joining_date: editJoiningDate,
+      employee_id: editEmployeeId.trim(),
       gender: editGender
     }
 
-    if (hasSupabase) {
-      ;(async () => {
-        try {
-          const { data, error } = await supabase.from('teachers').update(updates).eq('id', editingId).select().single()
-          if (error) throw error
-          setList(prev => prev.map(t => t.id === editingId ? data : t))
-        } catch (err) {
-          console.error('Supabase update failed, falling back to localStorage', err)
-          setList(prev => {
-            const updated = prev.map(t => t.id !== editingId ? t : { ...t, ...updates })
-            saveToStorage(updated)
-            try {
-              updated.forEach(u => {
-                const idx = teachers.findIndex(x => x.id === u.id)
-                if (idx >= 0) teachers[idx] = { ...teachers[idx], ...u }
-              })
-            } catch (e) {}
-            return updated
-          })
-        }
-      })()
-    } else {
-      setList(prev => {
-        const updated = prev.map(t => t.id !== editingId ? t : { ...t, ...updates })
-        saveToStorage(updated)
-        try {
-          updated.forEach(u => {
-            const idx = teachers.findIndex(x => x.id === u.id)
-            if (idx >= 0) teachers[idx] = { ...teachers[idx], ...u }
-          })
-        } catch (e) {}
-        return updated
-      })
-    }
-
-    setEditingId(null)
+    (async () => {
+      try {
+        const data = await TeachersAPI.update(editingId, updates);
+        setList(prev => prev.map(t => t.id === editingId ? { ...t, ...data } : t));
+      } catch (err) {
+        console.error('API update failed, falling back to localStorage', err);
+        setList(prev => {
+          const updated = prev.map(t => t.id !== editingId ? t : { ...t, ...updates });
+          saveToStorage(updated);
+          try {
+            updated.forEach(u => {
+              const idx = teachers.findIndex(x => x.id === u.id);
+              if (idx >= 0) teachers[idx] = { ...teachers[idx], ...u };
+            });
+          } catch (e) {}
+          return updated;
+        });
+      }
+      setEditingId(null);
+    })();
   }
 
   useEffect(() => {
-    if (typeof window === 'undefined') return
+    if (typeof window === 'undefined') return;
 
     const load = async () => {
-      if (hasSupabase) {
-        try {
-          const { data, error } = await supabase.from('teachers').select('*')
-          if (!error && data) {
-            setList(data)
-            return
-          }
-        } catch (err) {
-          console.error('Supabase fetch failed, falling back to localStorage', err)
-        }
+      try {
+        const response = await TeachersAPI.list();
+        setList(response.data);
+        return;
+      } catch (err) {
+        console.error('API fetch failed, falling back to localStorage', err);
       }
 
       try {
-        const raw = localStorage.getItem('madrassa_teachers')
+        const raw = localStorage.getItem('madrassa_teachers');
         if (raw) {
-          setList(JSON.parse(raw))
-          return
+          setList(JSON.parse(raw));
+          return;
         }
       } catch (e) {}
 
       // fallback to bundled data
-      setList(teachers.slice())
-    }
+      setList(teachers.slice());
+    };
 
-    load()
-  }, [])
+    load();
+  }, []);
 
   return (
     <>
@@ -252,12 +241,16 @@ export default function Teachers() {
           <CrudForm onSubmit={handleAdd} onCancel={() => setShowForm(false)} saveTitle="Add" cancelTitle="Cancel">
             <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
               <div>
-                <label className="text-sm font-medium mb-1 block">Name</label>
-                <input value={name} onChange={e => setName(e.target.value)} placeholder="Name" className="p-2 border rounded w-full" />
+                <label className="text-sm font-medium mb-1 block">First Name</label>
+                <input value={firstName} onChange={e => setFirstName(e.target.value)} placeholder="First Name" className="p-2 border rounded w-full" />
               </div>
               <div>
-                <label className="text-sm font-medium mb-1 block">Photo</label>
-                <input type="file" accept="image/*" onChange={handleAvatarChange} className="p-2 w-full" />
+                <label className="text-sm font-medium mb-1 block">Last Name</label>
+                <input value={lastName} onChange={e => setLastName(e.target.value)} placeholder="Last Name" className="p-2 border rounded w-full" />
+              </div>
+              <div>
+                <label className="text-sm font-medium mb-1 block">Employee ID</label>
+                <input value={employeeId} onChange={e => setEmployeeId(e.target.value)} placeholder="Employee ID" className="p-2 border rounded w-full" />
               </div>
               <div>
                 <label className="text-sm font-medium mb-1 block">Email</label>
@@ -266,23 +259,29 @@ export default function Teachers() {
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 mt-3">
               <div>
-                <label className="text-sm font-medium mb-1 block">Salary</label>
-                <input value={salary} onChange={e => setSalary(e.target.value)} placeholder="Salary" className="p-2 border rounded w-full" />
+                <label className="text-sm font-medium mb-1 block">Phone</label>
+                <input value={phone} onChange={e => setPhone(e.target.value)} placeholder="Phone" className="p-2 border rounded w-full" />
               </div>
               <div>
-                <label className="text-sm font-medium mb-1 block">Date of Join</label>
-                <input type="date" value={dateOfJoin} onChange={e => setDateOfJoin(e.target.value)} className="p-2 border rounded w-full" />
+                <label className="text-sm font-medium mb-1 block">Qualification</label>
+                <input value={qualification} onChange={e => setQualification(e.target.value)} placeholder="Qualification" className="p-2 border rounded w-full" />
               </div>
               <div>
-                <label className="text-sm font-medium mb-1 block">Mobile</label>
-                <input value={mobile} onChange={e => setMobile(e.target.value)} placeholder="Mobile" className="p-2 border rounded w-full" />
+                <label className="text-sm font-medium mb-1 block">Specialization</label>
+                <input value={specialization} onChange={e => setSpecialization(e.target.value)} placeholder="Specialization" className="p-2 border rounded w-full" />
               </div>
+              <div>
+                <label className="text-sm font-medium mb-1 block">Joining Date</label>
+                <input type="date" value={joiningDate} onChange={e => setJoiningDate(e.target.value)} className="p-2 border rounded w-full" />
+              </div>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 mt-3">
               <div>
                 <label className="text-sm font-medium mb-1 block">Gender</label>
                 <select value={gender} onChange={e => setGender(e.target.value)} className="p-2 border rounded w-full">
-                  <option>Male</option>
-                  <option>Female</option>
-                  <option>Other</option>
+                  <option>MALE</option>
+                  <option>FEMALE</option>
+                  <option>OTHER</option>
                 </select>
               </div>
             </div>
@@ -292,21 +291,23 @@ export default function Teachers() {
 
       <div className="mt-4 grid gap-4 grid-cols-1">
         {filtered.map(t => (
-          <div key={t.id} className={`bg-white shadow rounded-lg p-4 flex items-center space-x-4 ${t.active === false ? 'opacity-60' : ''}`}>
-            <img src={t.avatar} alt={t.name} className="h-14 w-14 rounded-full object-cover" />
+          <div key={t.id} className={`bg-white shadow rounded-lg p-4 flex items-center space-x-4 ${t.is_active === false ? 'opacity-60' : ''}`}>
             <div className="flex-1">
               {editingId === t.id ? (
                 <div className="w-full">
                   <CrudForm onSubmit={saveEdit} onCancel={cancelEdit} saveTitle="Save" cancelTitle="Cancel">
                       <div className="grid grid-cols-1 sm:grid-cols-4 gap-2">
                         <div>
-                          <label className="text-sm font-medium mb-1 block">Name</label>
-                          <input value={editName} onChange={e => setEditName(e.target.value)} className="p-2 border rounded w-full" />
+                          <label className="text-sm font-medium mb-1 block">First Name</label>
+                          <input value={editFirstName} onChange={e => setEditFirstName(e.target.value)} className="p-2 border rounded w-full" />
                         </div>
-                        
                         <div>
-                          <label className="text-sm font-medium mb-1 block">Photo</label>
-                          <input type="file" accept="image/*" onChange={handleEditAvatarChange} className="p-2 w-full" />
+                          <label className="text-sm font-medium mb-1 block">Last Name</label>
+                          <input value={editLastName} onChange={e => setEditLastName(e.target.value)} className="p-2 border rounded w-full" />
+                        </div>
+                        <div>
+                          <label className="text-sm font-medium mb-1 block">Employee ID</label>
+                          <input value={editEmployeeId} onChange={e => setEditEmployeeId(e.target.value)} className="p-2 border rounded w-full" />
                         </div>
                         <div>
                           <label className="text-sm font-medium mb-1 block">Email</label>
@@ -315,23 +316,29 @@ export default function Teachers() {
                       </div>
                       <div className="grid grid-cols-1 sm:grid-cols-4 gap-2">
                         <div>
-                          <label className="text-sm font-medium mb-1 block">Salary</label>
-                          <input value={editSalary} onChange={e => setEditSalary(e.target.value)} className="p-2 border rounded w-full" />
+                          <label className="text-sm font-medium mb-1 block">Phone</label>
+                          <input value={editPhone} onChange={e => setEditPhone(e.target.value)} className="p-2 border rounded w-full" />
                         </div>
                         <div>
-                          <label className="text-sm font-medium mb-1 block">Date of Join</label>
-                          <input type="date" value={editDateOfJoin} onChange={e => setEditDateOfJoin(e.target.value)} className="p-2 border rounded w-full" />
+                          <label className="text-sm font-medium mb-1 block">Qualification</label>
+                          <input value={editQualification} onChange={e => setEditQualification(e.target.value)} className="p-2 border rounded w-full" />
                         </div>
                         <div>
-                          <label className="text-sm font-medium mb-1 block">Mobile</label>
-                          <input value={editMobile} onChange={e => setEditMobile(e.target.value)} className="p-2 border rounded w-full" />
+                          <label className="text-sm font-medium mb-1 block">Specialization</label>
+                          <input value={editSpecialization} onChange={e => setEditSpecialization(e.target.value)} className="p-2 border rounded w-full" />
                         </div>
+                        <div>
+                          <label className="text-sm font-medium mb-1 block">Joining Date</label>
+                          <input type="date" value={editJoiningDate} onChange={e => setEditJoiningDate(e.target.value)} className="p-2 border rounded w-full" />
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-4 gap-2">
                         <div>
                           <label className="text-sm font-medium mb-1 block">Gender</label>
                           <select value={editGender} onChange={e => setEditGender(e.target.value)} className="p-2 border rounded w-full">
-                            <option>Male</option>
-                            <option>Female</option>
-                            <option>Other</option>
+                            <option>MALE</option>
+                            <option>FEMALE</option>
+                            <option>OTHER</option>
                           </select>
                         </div>
                       </div>
@@ -339,9 +346,9 @@ export default function Teachers() {
                 </div>
               ) : (
                 <>
-                  <div className="font-medium">{t.name} {t.active === false && <span className="text-xs text-red-500 ml-2">(Deactivated)</span>}</div>
+                  <div className="font-medium">{t.first_name} {t.last_name} {t.is_active === false && <span className="text-xs text-red-500 ml-2">(Deactivated)</span>}</div>
                   <div className="text-sm text-gray-500">{t.email && <span className="ml-2 text-sm text-gray-400">• {t.email}</span>}</div>
-                  <div className="text-xs text-gray-400 mt-1">{t.gender} • {t.mobile} • Joined {t.dateOfJoin || '—'} • Salary {t.salary || '—'}</div>
+                  <div className="text-xs text-gray-400 mt-1">{t.gender} • {t.phone} • Joined {t.joining_date || '—'} • Employee ID {t.employee_id}</div>
                 </>
               )}
             </div>
@@ -357,7 +364,7 @@ export default function Teachers() {
                     <span className="pointer-events-none absolute -top-8 left-1/2 transform -translate-x-1/2 whitespace-nowrap bg-black text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition">Edit</span>
                   </span>
                   <span className="relative inline-block group">
-                    <button type="button" onClick={() => handleToggleActive(t.id)} title={t.active === false ? 'Activate' : 'Deactivate'} aria-label={t.active === false ? 'Activate' : 'Deactivate'} className={`px-3 py-1 rounded flex items-center justify-center ${t.active === false ? 'bg-green-500 text-white' : 'bg-red-500 text-white'}`}>
+                    <button type="button" onClick={() => handleToggleActive(t.id)} title={t.is_active === false ? 'Activate' : 'Deactivate'} aria-label={t.is_active === false ? 'Activate' : 'Deactivate'} className={`px-3 py-1 rounded flex items-center justify-center ${t.is_active === false ? 'bg-green-500 text-white' : 'bg-red-500 text-white'}`}>
                       {t.active === false ? (
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
@@ -369,7 +376,7 @@ export default function Teachers() {
                         </svg>
                       )}
                     </button>
-                    <span className="pointer-events-none absolute -top-8 left-1/2 transform -translate-x-1/2 whitespace-nowrap bg-black text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition">{t.active === false ? 'Activate' : 'Deactivate'}</span>
+                    <span className="pointer-events-none absolute -top-8 left-1/2 transform -translate-x-1/2 whitespace-nowrap bg-black text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition">{t.is_active === false ? 'Activate' : 'Deactivate'}</span>
                   </span>
                 </>
               )}
