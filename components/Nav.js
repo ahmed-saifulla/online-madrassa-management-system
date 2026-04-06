@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
+import { clearAuth } from '../lib/auth'
 
 export default function Nav() {
   const [open, setOpen] = useState(false)
@@ -21,14 +22,9 @@ export default function Nav() {
   }, [])
 
   const handleLogout = () => {
-    if (typeof window !== 'undefined') {
-      localStorage.removeItem('madrassa_admin')
-      localStorage.removeItem('madrassa_teacher')
-      localStorage.removeItem('madrassa_student')
-    }
+    clearAuth()
     setIsLoggedIn(false)
     router.push('/')
-    if (typeof window !== 'undefined') window.dispatchEvent(new Event('madrassa_auth_changed'))
   }
 
   return (

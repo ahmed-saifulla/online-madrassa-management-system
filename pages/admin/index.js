@@ -13,8 +13,12 @@ export default function AdminIndex() {
   }, [])
 
   const handleLogout = () => {
-    localStorage.removeItem('madrassa_admin')
-    if (typeof window !== 'undefined') window.dispatchEvent(new Event('madrassa_auth_changed'))
+    try {
+      // lazy-import to avoid SSR issues
+      const { clearAuth } = require('../../lib/auth')
+      if (clearAuth) clearAuth()
+    } catch (e) {}
+
     router.push('/')
   }
 

@@ -1,5 +1,3 @@
-import { supabase } from '../../../lib/supabase'
-
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ success: false, message: 'Method not allowed' })
@@ -12,35 +10,25 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
+    const apiBase = 'https://77c2-2406-7400-56-1851-00-102.ngrok-free.app'
+    const apiVersion = process.env.API_VERSION || '/api/v1'
+    const url = `${apiBase}${apiVersion}/auth/login`
+
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ email, password })
     })
 
-    if (error) {
-      return res.status(401).json({ success: false, message: error.message })
+    const data = await response.json()
+
+    if (!response.ok) {
+      return res.status(response.status).json(data)
     }
 
-    const { session, user } = data
-
-    // Assuming role is stored in user_metadata
-    const role = user.user_metadata?.role || 'USER'
-
-    const response = {
-      success: true,
-      message: 'Login successful',
-      data: {
-        access_token: session.access_token,
-        refresh_token: session.refresh_token,
-        user: {
-          id: user.id,
-          email: user.email,
-          role: role,
-        },
-      },
-    }
-
-    res.status(200).json(response)
+    res.status(200).json(data)
   } catch (error) {
     console.error('Login error:', error)
     res.status(500).json({ success: false, message: 'Internal server error' })

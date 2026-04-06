@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { useRouter } from 'next/router'
 import Dashboard from '../components/Dashboard'
+import { clearAuth } from '../lib/auth'
 
 export default function Welcome() {
   const router = useRouter()
@@ -15,8 +16,7 @@ export default function Welcome() {
   }, [])
 
   const handleLogout = () => {
-    localStorage.removeItem('madrassa_admin')
-    if (typeof window !== 'undefined') window.dispatchEvent(new Event('madrassa_auth_changed'))
+    clearAuth()
     router.push('/')
   }
 

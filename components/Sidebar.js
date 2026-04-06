@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/router'
+import { clearAuth } from '../lib/auth'
 
 export default function Sidebar({ open, onClose }) {
   const [isLoggedIn, setIsLoggedIn] = useState(false)
@@ -22,14 +23,9 @@ export default function Sidebar({ open, onClose }) {
   }, [])
 
   const handleLogout = () => {
-    if (typeof window !== 'undefined') {
-      localStorage.removeItem('madrassa_admin')
-      localStorage.removeItem('madrassa_teacher')
-      localStorage.removeItem('madrassa_student')
-    }
+    clearAuth()
     router.push('/')
     if (onClose) onClose()
-    if (typeof window !== 'undefined') window.dispatchEvent(new Event('madrassa_auth_changed'))
   }
 
   // Sidebar content - only show when logged in
