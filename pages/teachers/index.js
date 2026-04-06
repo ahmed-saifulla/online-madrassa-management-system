@@ -110,10 +110,9 @@ export default function Teachers() {
   }
 
   async function handleToggleActive(id) {
-    console.log('handleToggleActive called for', id)
     const cur = list.find(t => t.id === id)
     if (!cur) return
-    const newActive = !(cur.is_active === false)
+    const newActive = !cur.is_active
 
     try {
       const data = await TeachersAPI.setActive(id, newActive);
@@ -365,7 +364,7 @@ export default function Teachers() {
                   </span>
                   <span className="relative inline-block group">
                     <button type="button" onClick={() => handleToggleActive(t.id)} title={t.is_active === false ? 'Activate' : 'Deactivate'} aria-label={t.is_active === false ? 'Activate' : 'Deactivate'} className={`px-3 py-1 rounded flex items-center justify-center ${t.is_active === false ? 'bg-green-500 text-white' : 'bg-red-500 text-white'}`}>
-                      {t.active === false ? (
+                      {t.is_active === false ? (
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                         </svg>
