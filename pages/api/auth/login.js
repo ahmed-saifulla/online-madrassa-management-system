@@ -14,6 +14,8 @@ export default async function handler(req, res) {
     const apiVersion = process.env.API_VERSION || '/api/v1'
     const url = `${apiBase}${apiVersion}/auth/login`
 
+    console.log(`Sending login request to ${url}`);
+
     const response = await fetch(url, {
       method: 'POST',
       headers: {

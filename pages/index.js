@@ -26,7 +26,6 @@ export default function Home() {
           <a href="/student/login" className="px-4 py-2 bg-green-600 text-white rounded-md text-center">Student Login</a>
           <a href="/admin/login" className="px-4 py-2 bg-gray-700 text-white rounded-md text-center">Admin Login</a>
         </div>
-        <p className="text-xs text-gray-500">Teacher: <strong>teacher1</strong> / <strong>pass1</strong> · Student: <strong>student10</strong> / <strong>pass10</strong></p>
       </div>
     </>
   )
