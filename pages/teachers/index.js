@@ -2,7 +2,7 @@ import { useState, useMemo, useEffect } from 'react'
 import { teachers } from '../../data/teachers'
 import IconButton from '../../components/IconButton'
 import CrudForm from '../../components/CrudForm'
-import { TeachersAPI } from '../../lib/api';
+import { TeachersAPI, formatDateForAPI } from '../../lib/api';
 
 
 export default function Teachers() {
@@ -29,7 +29,8 @@ export default function Teachers() {
   const [editSpecialization, setEditSpecialization] = useState('')
   const [editJoiningDate, setEditJoiningDate] = useState('')
   const [editEmployeeId, setEditEmployeeId] = useState('')
-  const [editGender, setEditGender] = useState('Male')
+  const [gender, setGender] = useState('MALE')
+  const [editGender, setEditGender] = useState('MALE')
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase()
@@ -62,15 +63,17 @@ export default function Teachers() {
     if (!firstName.trim() || !lastName.trim()) return
     const newTeacher = {
       // keep a temporary id for client-side list; Supabase may overwrite with its id
-      id: 't' + Date.now(),
+      // id: 't' + Date.now(),
       employee_id: employeeId.trim() || `EMP${Date.now()}`,
       first_name: firstName.trim(),
       last_name: lastName.trim(),
-      gender: gender || 'MALE',
+        gender: gender || 'MALE',
+        email: email.trim() || '',
+        password: 'salsabeel',
       phone: phone.trim() || '',
       qualification: qualification.trim() || '',
       specialization: specialization.trim() || '',
-      joining_date: joiningDate || '',
+        joining_date: joiningDate ? formatDateForAPI(joiningDate) : '',
       is_active: true
     }
 
@@ -101,7 +104,7 @@ export default function Teachers() {
     setSpecialization('')
     setJoiningDate('')
     setEmployeeId('')
-    setGender('Male')
+    setGender('MALE')
     setShowForm(false)
   }
 
@@ -142,7 +145,7 @@ export default function Teachers() {
     setEditSpecialization(t.specialization || '')
     setEditJoiningDate(t.joining_date || '')
     setEditEmployeeId(t.employee_id || '')
-    setEditGender(t.gender || 'Male')
+    setEditGender(t.gender || 'MALE')
   }
 
   function cancelEdit() {
@@ -161,7 +164,7 @@ export default function Teachers() {
       phone: editPhone.trim(),
       qualification: editQualification.trim(),
       specialization: editSpecialization.trim(),
-      joining_date: editJoiningDate,
+      joining_date: editJoiningDate ? formatDateForAPI(editJoiningDate) : '',
       employee_id: editEmployeeId.trim(),
       gender: editGender
     }
