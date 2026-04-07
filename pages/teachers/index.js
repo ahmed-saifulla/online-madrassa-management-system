@@ -18,6 +18,7 @@ export default function Teachers() {
   const [qualification, setQualification] = useState('')
   const [specialization, setSpecialization] = useState('')
   const [joiningDate, setJoiningDate] = useState('')
+  const [dob, setDob] = useState('')
   const [employeeId, setEmployeeId] = useState('')
   const [editingId, setEditingId] = useState(null)
   const [editFirstName, setEditFirstName] = useState('')
@@ -28,6 +29,7 @@ export default function Teachers() {
   const [editQualification, setEditQualification] = useState('')
   const [editSpecialization, setEditSpecialization] = useState('')
   const [editJoiningDate, setEditJoiningDate] = useState('')
+  const [editDob, setEditDob] = useState('')
   const [editEmployeeId, setEditEmployeeId] = useState('')
   const [gender, setGender] = useState('MALE')
   const [editGender, setEditGender] = useState('MALE')
@@ -70,6 +72,7 @@ export default function Teachers() {
         gender: gender || 'MALE',
         email: email.trim() || '',
         password: 'salsabeel',
+        dob: dob ? formatDateForAPI(dob) : '',
       phone: phone.trim() || '',
       qualification: qualification.trim() || '',
       specialization: specialization.trim() || '',
@@ -78,10 +81,30 @@ export default function Teachers() {
     }
 
     try {
-      const data = await TeachersAPI.create(newTeacher);
-      setList(prev => [data, ...prev]);
-      finishAdd();
-      return;
+      const res = await TeachersAPI.create(newTeacher);
+      // expected response: { success: true, message: '', data: { ... } }
+      const d = res && res.data ? res.data : null
+      if (d) {
+        const uiTeacher = {
+          id: d.teacher_id || d.id || newTeacher.id,
+          employee_id: d.employee_id || newTeacher.employee_id,
+          first_name: d.profile?.first_name || newTeacher.first_name,
+          last_name: d.profile?.last_name || newTeacher.last_name,
+          gender: d.profile?.gender || newTeacher.gender || 'MALE',
+          phone: d.profile?.phone || newTeacher.phone || '',
+          qualification: d.profile?.qualification || newTeacher.qualification || '',
+          specialization: d.profile?.specialization || newTeacher.specialization || '',
+          joining_date: d.created_at || (newTeacher.joining_date || ''),
+          dob: d.profile?.dob || d.dob || '',
+          is_active: (typeof d.is_active !== 'undefined') ? d.is_active : newTeacher.is_active,
+          email: d.email || newTeacher.email || '',
+          avatar: d.profile?.avatar || newTeacher.avatar || ''
+        }
+
+        setList(prev => [uiTeacher, ...prev]);
+        finishAdd();
+        return;
+      }
     } catch (err) {
       console.error('API insert failed, falling back to localStorage', err);
       setList(prev => {
@@ -103,6 +126,7 @@ export default function Teachers() {
     setQualification('')
     setSpecialization('')
     setJoiningDate('')
+    setDob('')
     setEmployeeId('')
     setGender('MALE')
     setShowForm(false)
@@ -144,6 +168,7 @@ export default function Teachers() {
     setEditQualification(t.qualification || '')
     setEditSpecialization(t.specialization || '')
     setEditJoiningDate(t.joining_date || '')
+    setEditDob(t.dob || '')
     setEditEmployeeId(t.employee_id || '')
     setEditGender(t.gender || 'MALE')
   }
@@ -165,6 +190,7 @@ export default function Teachers() {
       qualification: editQualification.trim(),
       specialization: editSpecialization.trim(),
       joining_date: editJoiningDate ? formatDateForAPI(editJoiningDate) : '',
+      dob: editDob ? formatDateForAPI(editDob) : '',
       employee_id: editEmployeeId.trim(),
       gender: editGender
     }
@@ -279,6 +305,10 @@ export default function Teachers() {
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 mt-3">
               <div>
+                <label className="text-sm font-medium mb-1 block">Date of Birth</label>
+                <input type="date" value={dob} onChange={e => setDob(e.target.value)} className="p-2 border rounded w-full" />
+              </div>
+              <div>
                 <label className="text-sm font-medium mb-1 block">Gender</label>
                 <select value={gender} onChange={e => setGender(e.target.value)} className="p-2 border rounded w-full">
                   <option>MALE</option>
@@ -334,7 +364,11 @@ export default function Teachers() {
                           <input type="date" value={editJoiningDate} onChange={e => setEditJoiningDate(e.target.value)} className="p-2 border rounded w-full" />
                         </div>
                       </div>
-                      <div className="grid grid-cols-1 sm:grid-cols-4 gap-2">
+                      <div className="grid grid-cols-1 sm:grid-cols-4 gap-2 mt-2">
+                        <div>
+                          <label className="text-sm font-medium mb-1 block">Date of Birth</label>
+                          <input type="date" value={editDob} onChange={e => setEditDob(e.target.value)} className="p-2 border rounded w-full" />
+                        </div>
                         <div>
                           <label className="text-sm font-medium mb-1 block">Gender</label>
                           <select value={editGender} onChange={e => setEditGender(e.target.value)} className="p-2 border rounded w-full">
