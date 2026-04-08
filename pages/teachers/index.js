@@ -143,7 +143,7 @@ export default function Teachers() {
 
     try {
       const data = await TeachersAPI.setActive(id, newActive);
-      setList(prev => prev.map(t => t.id === id ? { ...t, is_active: data.is_active } : t));
+      setList(prev => prev.map(t => t.id === id ? { ...t, is_active: data.data?.is_active } : t));
     } catch (err) {
       console.error('API update failed, falling back to localStorage', err);
       setList(prev => {

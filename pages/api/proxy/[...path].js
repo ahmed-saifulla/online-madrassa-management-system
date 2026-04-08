@@ -15,7 +15,7 @@ export default async function handler(req, res) {
     const { path = [] , ...restQuery } = req.query || {};
     const pathSegments = Array.isArray(path) ? path.join('/') : path;
     const queryString = new URLSearchParams(restQuery).toString();
-    const targetBase = 'http://144.24.146.130/edu/api/v1';
+    const targetBase = 'https://144.24.146.130/edu/api/v1';
     const targetUrl = `${targetBase}/${pathSegments}${queryString ? '?' + queryString : ''}`;
 
     const rawBody = await getRawBody(req);
