@@ -7,6 +7,8 @@ import { TeachersAPI, formatDateForAPI } from '../../lib/api';
 
 export default function Teachers() {
   const [list, setList] = useState([])
+  const [errorMessage, setErrorMessage] = useState('')
+  const [successMessage, setSuccessMessage] = useState('')
   const [query, setQuery] = useState('')
   const [showForm, setShowForm] = useState(false)
   const [name, setName] = useState('')
@@ -62,6 +64,7 @@ export default function Teachers() {
 
   async function handleAdd(e) {
     e.preventDefault()
+    // Don't clear error here; only on success or cancel
     if (!firstName.trim() || !lastName.trim()) return
     const newTeacher = {
       // keep a temporary id for client-side list; Supabase may overwrite with its id
@@ -82,38 +85,44 @@ export default function Teachers() {
 
     try {
       const res = await TeachersAPI.create(newTeacher);
-      // expected response: { success: true, message: '', data: { ... } }
-      const d = res && res.data ? res.data : null
+      // Strictly handle API response format
+      if (!res || res.success === false) {
+        setErrorMessage('Teacher addition failed');
+        setTimeout(() => setErrorMessage(''), 2000);
+        return;
+      }
+      const d = res.data;
       if (d) {
+        const profile = d.profile || {};
         const uiTeacher = {
           id: d.teacher_id || d.id || newTeacher.id,
           employee_id: d.employee_id || newTeacher.employee_id,
-          first_name: d.profile?.first_name || newTeacher.first_name,
-          last_name: d.profile?.last_name || newTeacher.last_name,
-          gender: d.profile?.gender || newTeacher.gender || 'MALE',
-          phone: d.profile?.phone || newTeacher.phone || '',
-          qualification: d.profile?.qualification || newTeacher.qualification || '',
-          specialization: d.profile?.specialization || newTeacher.specialization || '',
+          first_name: profile.first_name || newTeacher.first_name,
+          last_name: profile.last_name || newTeacher.last_name,
+          gender: profile.gender || newTeacher.gender || 'MALE',
+          phone: profile.phone || newTeacher.phone || '',
+          qualification: profile.qualification || newTeacher.qualification || '',
+          specialization: profile.specialization || newTeacher.specialization || '',
           joining_date: d.created_at || (newTeacher.joining_date || ''),
-          dob: d.profile?.dob || d.dob || '',
-          is_active: (typeof d.is_active !== 'undefined') ? d.is_active : newTeacher.is_active,
+          dob: profile.dob || d.dob || '',
+          is_active: typeof d.is_active !== 'undefined' ? d.is_active : newTeacher.is_active,
           email: d.email || newTeacher.email || '',
-          avatar: d.profile?.avatar || newTeacher.avatar || ''
-        }
-
+          avatar: profile.avatar || newTeacher.avatar || ''
+        };
         setList(prev => [uiTeacher, ...prev]);
-        finishAdd();
+        setSuccessMessage('Teacher added successfully');
+        setTimeout(() => {
+          finishAdd();
+          setSuccessMessage('');
+        }, 2000);
         return;
       }
+      setErrorMessage('Teacher addition failed');
     } catch (err) {
-      console.error('API insert failed, falling back to localStorage', err);
-      setList(prev => {
-        const updated = [newTeacher, ...prev];
-        try { localStorage.setItem('madrassa_teachers', JSON.stringify(updated)); } catch (e) {}
-        try { teachers.unshift(newTeacher); } catch (e) {}
-        return updated;
-      });
-      finishAdd();
+      // If error response has .error, show it, else generic
+      setErrorMessage('Teacher addition failed');
+      setTimeout(() => setErrorMessage(''), 2000);
+      return;
     }
   }
 
@@ -130,6 +139,13 @@ export default function Teachers() {
     setEmployeeId('')
     setGender('MALE')
     setShowForm(false)
+    setErrorMessage('')
+  }
+
+  // Only clear error when form is closed
+  function handleCancelForm() {
+    setShowForm(false);
+    setErrorMessage('');
   }
 
   function saveToStorage(updated) {
@@ -266,7 +282,13 @@ export default function Teachers() {
 
       {showForm && (
         <div className="mt-4 bg-white p-4 rounded shadow">
-          <CrudForm onSubmit={handleAdd} onCancel={() => setShowForm(false)} saveTitle="Add" cancelTitle="Cancel">
+          {errorMessage && (
+            <div className="mb-2 p-2 bg-red-100 text-red-700 rounded border border-red-300">{errorMessage}</div>
+          )}
+          {successMessage && (
+            <div className="mb-2 p-2 bg-green-100 text-green-700 rounded border border-green-300">{successMessage}</div>
+          )}
+          <CrudForm onSubmit={handleAdd} onCancel={handleCancelForm} saveTitle="Add" cancelTitle="Cancel">
             <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
               <div>
                 <label className="text-sm font-medium mb-1 block">First Name</label>
