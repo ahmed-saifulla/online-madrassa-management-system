@@ -9,6 +9,7 @@ export default function Teachers() {
   const [list, setList] = useState([])
   const [errorMessage, setErrorMessage] = useState('')
   const [successMessage, setSuccessMessage] = useState('')
+  const [editMessage, setEditMessage] = useState('')
   const [query, setQuery] = useState('')
   const [showForm, setShowForm] = useState(false)
   const [name, setName] = useState('')
@@ -96,12 +97,12 @@ export default function Teachers() {
         const profile = d.profile || {};
         const uiTeacher = {
           id: d.teacher_id || d.id || newTeacher.id,
-          employee_id: d.employee_id || newTeacher.employee_id,
-          first_name: profile.first_name || newTeacher.first_name,
-          last_name: profile.last_name || newTeacher.last_name,
-          gender: profile.gender || newTeacher.gender || 'MALE',
-          phone: profile.phone || newTeacher.phone || '',
-          qualification: profile.qualification || newTeacher.qualification || '',
+           employee_id: d.employee_id || newTeacher.employee_id,
+           first_name: profile.first_name || newTeacher.first_name,
+           last_name: profile.last_name || newTeacher.last_name,
+           gender: profile.gender || newTeacher.gender || 'MALE',
+           phone: profile.phone || newTeacher.phone || '',
+           qualification: profile.qualification || newTeacher.qualification || '',
           specialization: profile.specialization || newTeacher.specialization || '',
           joining_date: d.created_at || (newTeacher.joining_date || ''),
           dob: profile.dob || d.dob || '',
@@ -193,44 +194,38 @@ export default function Teachers() {
     setEditingId(null)
   }
 
-  function saveEdit(e) {
+  async function saveEdit(e) {
     e.preventDefault()
     if (!editingId) return
 
+    // Only send fields required by PUT update teacher endpoint
     const updates = {
       first_name: editFirstName.trim(),
       last_name: editLastName.trim(),
-      avatar: editAvatar.trim(),
-      email: editEmail.trim(),
       phone: editPhone.trim(),
       qualification: editQualification.trim(),
-      specialization: editSpecialization.trim(),
-      joining_date: editJoiningDate ? formatDateForAPI(editJoiningDate) : '',
-      dob: editDob ? formatDateForAPI(editDob) : '',
-      employee_id: editEmployeeId.trim(),
-      gender: editGender
+      specialization: editSpecialization.trim()
     }
 
-    (async () => {
-      try {
-        const data = await TeachersAPI.update(editingId, updates);
-        setList(prev => prev.map(t => t.id === editingId ? { ...t, ...data } : t));
-      } catch (err) {
-        console.error('API update failed, falling back to localStorage', err);
-        setList(prev => {
-          const updated = prev.map(t => t.id !== editingId ? t : { ...t, ...updates });
-          saveToStorage(updated);
-          try {
-            updated.forEach(u => {
-              const idx = teachers.findIndex(x => x.id === u.id);
-              if (idx >= 0) teachers[idx] = { ...teachers[idx], ...u };
-            });
-          } catch (e) {}
-          return updated;
-        });
-      }
-      setEditingId(null);
-    })();
+    try {
+        const response = await TeachersAPI.update(editingId, updates);
+        const updatedTeacher = response && response.data ? response.data : updates;
+        setList(prev => prev.map(t => t.id === editingId ? updatedTeacher : t));
+    } catch (err) {
+      console.error('API update failed, falling back to localStorage', err);
+      setList(prev => {
+        const updated = prev.map(t => t.id !== editingId ? t : { ...t, ...updates });
+        saveToStorage(updated);
+        try {
+          updated.forEach(u => {
+            const idx = teachers.findIndex(x => x.id === u.id);
+            if (idx >= 0) teachers[idx] = { ...teachers[idx], ...u };
+          });
+        } catch (e) {}
+        return updated;
+      });
+    }
+    setEditingId(null);
   }
 
   useEffect(() => {
@@ -278,6 +273,9 @@ export default function Teachers() {
             )}
           </IconButton>
         </div>
+                          {editMessage && (
+                            <div className={`mb-2 p-2 rounded border text-center ${editMessage.includes('success') ? 'bg-green-100 text-green-700 border-green-300' : 'bg-red-100 text-red-700 border-red-300'}`}>{editMessage}</div>
+                          )}
       </div>
 
       {showForm && (
