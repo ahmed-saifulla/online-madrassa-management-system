@@ -33,6 +33,17 @@ export default function AdminLogin() {
         return
       }
 
+      // role validation (new format: data.data.user.role)
+      const role = data?.data?.user?.role
+      if (role !== 'SUPER_ADMIN') {
+        // Clear all tokens and show unauthorized error
+        localStorage.removeItem('access_token');
+        localStorage.removeItem('refresh_token');
+        localStorage.removeItem('madrassa_admin');
+        setError('Unauthorized: account is not an admin');
+        return;
+      }
+
       // store tokens if provided
       if (data?.data?.access_token) {
         localStorage.setItem('access_token', data.data.access_token)

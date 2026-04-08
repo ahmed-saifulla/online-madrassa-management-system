@@ -31,12 +31,16 @@ export default function TeacherLogin() {
       const data = await res.json()
       if (!res.ok) { setError(data?.message || 'Login failed'); setLoading(false); return }
 
-      // role validation
-      const role = data?.data?.role
+      // role validation (new format: data.data.user.role)
+      const role = data?.data?.user?.role
       if (role !== 'TEACHER') {
-        setError('Account is not a teacher')
-        setLoading(false)
-        return
+        // Clear all tokens and show unauthorized error
+        localStorage.removeItem('access_token');
+        localStorage.removeItem('refresh_token');
+        localStorage.removeItem('madrassa_teacher');
+        setError('Unauthorized: account is not a teacher');
+        setLoading(false);
+        return;
       }
 
       if (data?.data?.access_token) localStorage.setItem('access_token', data.data.access_token)
@@ -44,10 +48,8 @@ export default function TeacherLogin() {
 
       localStorage.setItem('madrassa_teacher', '1')
       if (typeof window !== 'undefined') window.dispatchEvent(new Event('madrassa_auth_changed'))
-      // role-based redirect (teacher dashboard if available)
-      const target = role === 'TEACHER' ? '/teacher' : '/welcome'
       setToast('Login successful')
-      router.push(target)
+      router.push('/teacher')
     } catch (err) {
       console.error('Teacher login error', err)
       setError('Unable to reach auth server')

@@ -31,12 +31,16 @@ export default function StudentLogin() {
       const data = await res.json()
       if (!res.ok) { setError(data?.message || 'Login failed'); setLoading(false); return }
 
-      // role validation
-      const role = data?.data?.role
+      // role validation (new format: data.data.user.role)
+      const role = data?.data?.user?.role
       if (role !== 'STUDENT') {
-        setError('Account is not a student')
-        setLoading(false)
-        return
+        // Clear all tokens and show unauthorized error
+        localStorage.removeItem('access_token');
+        localStorage.removeItem('refresh_token');
+        localStorage.removeItem('madrassa_student');
+        setError('Unauthorized: account is not a student');
+        setLoading(false);
+        return;
       }
 
       if (data?.data?.access_token) localStorage.setItem('access_token', data.data.access_token)
@@ -44,9 +48,8 @@ export default function StudentLogin() {
 
       localStorage.setItem('madrassa_student', '1')
       if (typeof window !== 'undefined') window.dispatchEvent(new Event('madrassa_auth_changed'))
-      const target = role === 'STUDENT' ? '/student' : '/welcome'
       setToast('Login successful')
-      router.push(target)
+      router.push('/student')
     } catch (err) {
       console.error('Student login error', err)
       setError('Unable to reach auth server')
