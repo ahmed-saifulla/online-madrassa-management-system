@@ -1,5 +1,6 @@
 import { useEffect, useState, useMemo } from 'react'
 import { useRouter } from 'next/router'
+import { TeachersAPI } from '../lib/api'
 
 export default function Dashboard() {
   const router = useRouter()
@@ -25,8 +26,19 @@ export default function Dashboard() {
   })
 
   useEffect(() => {
-    // Load data from localStorage
+    
     try {
+      // Fetch total teacher count from API
+    TeachersAPI.list({ page: 1, limit: 10 })
+      .then(res => {
+        setStats(prev => ({
+          ...prev,
+          totalTeachers: res && res.meta && typeof res.meta.total_items === 'number' ? res.meta.total_items : 0
+        }))
+      })
+      .catch(() => {
+        setStats(prev => ({ ...prev, totalTeachers: 0 }))
+      })
       const students = JSON.parse(localStorage.getItem('madrassa_students') || '[]')
       const teachers = JSON.parse(localStorage.getItem('madrassa_teachers') || '[]')
       const subjects = JSON.parse(localStorage.getItem('madrassa_subjects') || '[]')
