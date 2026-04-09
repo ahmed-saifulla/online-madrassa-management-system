@@ -1,3 +1,14 @@
+  // Input validation for teacher forms
+  function validateTeacherInput({ firstName, lastName, phone, email, qualification, specialization }) {
+    if (!firstName || !firstName.trim()) return 'First name is required.';
+    if (!lastName || !lastName.trim()) return 'Last name is required.';
+    if (!phone || !phone.trim()) return 'Phone is required.';
+    if (!/^[0-9]{7,15}$/.test(phone.trim())) return 'Phone must be 7-15 digits.';
+    if (email && email.trim() && !/^\S+@\S+\.\S+$/.test(email.trim())) return 'Invalid email address.';
+    if (!qualification || !qualification.trim()) return 'Qualification is required.';
+    if (!specialization || !specialization.trim()) return 'Specialization is required.';
+    return '';
+  }
 import { useState, useMemo, useEffect } from 'react'
 import { teachers } from '../../data/teachers'
 import IconButton from '../../components/IconButton'
@@ -65,8 +76,20 @@ export default function Teachers() {
 
   async function handleAdd(e) {
     e.preventDefault()
-    // Don't clear error here; only on success or cancel
-    if (!firstName.trim() || !lastName.trim()) return
+    // Validate input
+    const validationError = validateTeacherInput({
+      firstName,
+      lastName,
+      phone,
+      email,
+      qualification,
+      specialization
+    });
+    if (validationError) {
+      setErrorMessage(validationError);
+      setTimeout(() => setErrorMessage(''), 2500);
+      return;
+    }
     const newTeacher = {
       // keep a temporary id for client-side list; Supabase may overwrite with its id
       // id: 't' + Date.now(),
@@ -197,6 +220,21 @@ export default function Teachers() {
   async function saveEdit(e) {
     e.preventDefault()
     if (!editingId) return
+
+    // Validate input
+    const validationError = validateTeacherInput({
+      firstName: editFirstName,
+      lastName: editLastName,
+      phone: editPhone,
+      email: editEmail,
+      qualification: editQualification,
+      specialization: editSpecialization
+    });
+    if (validationError) {
+      setEditMessage(validationError);
+      setTimeout(() => setEditMessage(''), 2500);
+      return;
+    }
 
     // Only send fields required by PUT update teacher endpoint
     const updates = {
@@ -347,6 +385,9 @@ export default function Teachers() {
             <div className="flex-1">
               {editingId === t.id ? (
                 <div className="w-full">
+                  {editMessage && (
+                    <div className={`mb-2 p-2 rounded border text-center ${editMessage.includes('success') ? 'bg-green-100 text-green-700 border-green-300' : 'bg-red-100 text-red-700 border-red-300'}`}>{editMessage}</div>
+                  )}
                   <CrudForm onSubmit={saveEdit} onCancel={cancelEdit} saveTitle="Save" cancelTitle="Cancel">
                       <div className="grid grid-cols-1 sm:grid-cols-4 gap-2">
                         <div>
