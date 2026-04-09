@@ -198,6 +198,22 @@ export default function Teachers() {
     }
   }
 
+  // Helper to extract YYYY-MM-DD from ISO or date string
+  function toDateInputValue(dateStr) {
+    if (!dateStr) return '';
+    // If already YYYY-MM-DD
+    if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) return dateStr;
+    // If ISO string
+    const d = new Date(dateStr);
+    if (!isNaN(d)) {
+      const yyyy = d.getFullYear();
+      const mm = String(d.getMonth() + 1).padStart(2, '0');
+      const dd = String(d.getDate()).padStart(2, '0');
+      return `${yyyy}-${mm}-${dd}`;
+    }
+    return '';
+  }
+
   function startEdit(t) {
     setEditingId(t.id)
     setEditFirstName(t.first_name)
@@ -207,8 +223,8 @@ export default function Teachers() {
     setEditPhone(t.phone || '')
     setEditQualification(t.qualification || '')
     setEditSpecialization(t.specialization || '')
-    setEditJoiningDate(t.joining_date || '')
-    setEditDob(t.dob || '')
+    setEditJoiningDate(toDateInputValue(t.joining_date))
+    setEditDob(toDateInputValue(t.dob))
     setEditEmployeeId(t.employee_id || '')
     setEditGender(t.gender || 'MALE')
   }
