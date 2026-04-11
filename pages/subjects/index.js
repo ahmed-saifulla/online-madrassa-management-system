@@ -1,7 +1,8 @@
+
 import { useState, useMemo, useEffect } from 'react'
 import IconButton from '../../components/IconButton'
-import { teachers as defaultTeachers } from '../../data/teachers'
-import { divisions as defaultDivisions } from '../../data/divisions'
+// import { teachers as defaultTeachers } from '../../data/teachers'
+// import { divisions as defaultDivisions } from '../../data/divisions'
 
 export default function Subjects() {
   const [list, setList] = useState([])
@@ -29,13 +30,13 @@ export default function Subjects() {
 
     try {
       const tRaw = localStorage.getItem('madrassa_teachers')
-      setTeachers(tRaw ? JSON.parse(tRaw) : defaultTeachers.slice())
-    } catch (e) { setTeachers(defaultTeachers.slice()) }
+      // setTeachers(tRaw ? JSON.parse(tRaw) : defaultTeachers.slice())
+    } catch (e) { /* setTeachers(defaultTeachers.slice()) */ }
 
     try {
       const dRaw = localStorage.getItem('madrassa_divisions')
-      setDivisions(dRaw ? JSON.parse(dRaw) : defaultDivisions.slice())
-    } catch (e) { setDivisions(defaultDivisions.slice()) }
+      // setDivisions(dRaw ? JSON.parse(dRaw) : defaultDivisions.slice())
+    } catch (e) { /* setDivisions(defaultDivisions.slice()) */ }
     try {
       const cRaw = localStorage.getItem('madrassa_classes')
       setClasses(cRaw ? JSON.parse(cRaw) : [])
