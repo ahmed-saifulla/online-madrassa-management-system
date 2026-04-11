@@ -1,61 +1,128 @@
-import { useState, useEffect, useMemo } from 'react'
-import IconButton from '../../../components/IconButton'
-import MigrateModal from '../../../components/MigrateModal'
+import { useState, useEffect } from 'react';
+import IconButton from '../../../components/IconButton';
+import { AcademicYearsAPI, formatDateForAPI } from '../../../lib/api';
 
 export default function AcademicYearsPage() {
-  const [years, setYears] = useState([])
-  const [name, setName] = useState('')
-  const [showForm, setShowForm] = useState(false)
-  const [searchQuery, setSearchQuery] = useState('')
-  
-  const [showMigrate, setShowMigrate] = useState(false)
-  const [notice, setNotice] = useState('')
+  const [years, setYears] = useState([]);
+  const [name, setName] = useState('');
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
+  const [showForm, setShowForm] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [editingId, setEditingId] = useState(null);
+  const [editName, setEditName] = useState('');
+  const [editStartDate, setEditStartDate] = useState('');
+  const [editEndDate, setEditEndDate] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [notice, setNotice] = useState('');
 
   useEffect(() => {
-    try {
-      const raw = localStorage.getItem('madrassa_academic_years')
-      if (raw) { setYears(JSON.parse(raw)); return }
-    } catch (e) {}
-    setYears([])
-  }, [])
+    AcademicYearsAPI.list()
+      .then(res => setYears(Array.isArray(res.data) ? res.data : []))
+      .catch(() => setYears([]));
+  }, []);
 
-  const filteredYears = useMemo(() => {
-    const q = searchQuery.trim().toLowerCase()
-    if (!q) return years
-    return years.filter(y => y.name.toLowerCase().includes(q))
-  }, [years, searchQuery])
+  const filteredYears = years.filter(y => y.name.toLowerCase().includes(searchQuery.trim().toLowerCase()));
 
-  function persist(updated) {
-    try { localStorage.setItem('madrassa_academic_years', JSON.stringify(updated)) } catch (e) {}
-    setYears(updated)
-  }
-
-  function handleAdd(e) {
-    e.preventDefault()
-    if (!name.trim()) return
-    const newYear = { id: 'y' + Date.now(), name: name.trim(), createdAt: Date.now() }
-    persist([newYear, ...years])
-    setName('')
-    setShowForm(false)
-    try { localStorage.setItem('madrassa_active_year', newYear.id) } catch (e) {}
-    if (typeof window !== 'undefined') window.dispatchEvent(new Event('madrassa_year_changed'))
-    setNotice('Academic year added')
-    setTimeout(()=>setNotice(''), 1800)
-  }
-
-  function handleDelete(id, name) {
-    if (!window.confirm(`Are you sure you want to delete "${name}"? This action cannot be undone.`)) {
-      return
+  async function handleAdd(e) {
+    e.preventDefault();
+    setLoading(true);
+    setError('');
+    if (!name.trim()) {
+      setError('Name is required.');
+      setLoading(false);
+      return;
     }
-    const updated = years.filter(y => y.id !== id)
-    persist(updated)
+    if (!startDate) {
+      setError('Start date is required.');
+      setLoading(false);
+      return;
+    }
+    if (!endDate) {
+      setError('End date is required.');
+      setLoading(false);
+      return;
+    }
     try {
-      const active = localStorage.getItem('madrassa_active_year')
-      if (active === id) {
-        localStorage.removeItem('madrassa_active_year')
-        if (typeof window !== 'undefined') window.dispatchEvent(new Event('madrassa_year_changed'))
-      }
-    } catch (e) {}
+      const res = await AcademicYearsAPI.create({
+        name: name.trim(),
+        start_date: formatDateForAPI(startDate),
+        end_date: formatDateForAPI(endDate)
+      });
+      setYears(prev => [res.data, ...prev]);
+      setName('');
+      setStartDate('');
+      setEndDate('');
+      setShowForm(false);
+      setNotice('Academic year added');
+      setTimeout(()=>setNotice(''), 1800);
+    } catch (err) {
+      setError('Failed to add: ' + err.message);
+    }
+    setLoading(false);
+  }
+
+  function startEdit(y) {
+    setEditingId(y.id);
+    setEditName(y.name);
+    setEditStartDate(y.start_date ? y.start_date.substring(0, 10) : '');
+    setEditEndDate(y.end_date ? y.end_date.substring(0, 10) : '');
+  }
+
+  function cancelEdit() {
+    setEditingId(null);
+    setEditName('');
+    setEditStartDate('');
+    setEditEndDate('');
+  }
+
+  async function saveEdit(e) {
+    e.preventDefault();
+    setLoading(true);
+    setError('');
+    if (!editName.trim()) {
+      setError('Name is required.');
+      setLoading(false);
+      return;
+    }
+    if (!editStartDate) {
+      setError('Start date is required.');
+      setLoading(false);
+      return;
+    }
+    if (!editEndDate) {
+      setError('End date is required.');
+      setLoading(false);
+      return;
+    }
+    try {
+      const res = await AcademicYearsAPI.update(editingId, {
+        name: editName.trim(),
+        start_date: formatDateForAPI(editStartDate),
+        end_date: formatDateForAPI(editEndDate)
+      });
+      setYears(prev => prev.map(y => y.id === editingId ? res.data : y));
+      cancelEdit();
+      setNotice('Academic year updated');
+      setTimeout(()=>setNotice(''), 1800);
+    } catch (err) {
+      setError('Failed to update: ' + err.message);
+    }
+    setLoading(false);
+  }
+
+  async function handleDelete(id, name) {
+    if (!window.confirm(`Are you sure you want to delete "${name}"? This action cannot be undone.`)) return;
+    setLoading(true);
+    setError('');
+    try {
+      await AcademicYearsAPI.delete(id);
+      setYears(prev => prev.filter(y => y.id !== id));
+    } catch (err) {
+      setError('Failed to delete: ' + err.message);
+    }
+    setLoading(false);
   }
 
   return (
@@ -67,7 +134,7 @@ export default function AcademicYearsPage() {
             {showForm ? 'Cancel' : 'Add New'}
           </button>
           {notice && <div className="text-sm text-green-600">{notice}</div>}
-          <IconButton title="Migrate data" onClick={()=>setShowMigrate(true)} className="px-3 py-2 bg-green-600 text-white rounded">Migrate</IconButton>
+          {/* <IconButton title="Migrate data" onClick={()=>setShowMigrate(true)} className="px-3 py-2 bg-green-600 text-white rounded">Migrate</IconButton> */}
         </div>
       </div>
 
@@ -83,7 +150,27 @@ export default function AcademicYearsPage() {
               autoFocus
             />
           </div>
-          <button type="submit" className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">Save</button>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Start Date</label>
+            <input
+              type="date"
+              value={startDate}
+              onChange={e=>setStartDate(e.target.value)}
+              className="px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              required
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">End Date</label>
+            <input
+              type="date"
+              value={endDate}
+              onChange={e=>setEndDate(e.target.value)}
+              className="px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              required
+            />
+          </div>
+          <button type="submit" className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700" disabled={loading}>{loading ? 'Saving...' : 'Save'}</button>
         </form>
       )}
 
@@ -105,15 +192,28 @@ export default function AcademicYearsPage() {
           <div className="space-y-3">
             {filteredYears.map(y => (
               <div key={y.id} className="bg-white p-3 rounded shadow flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <button onClick={()=>{ try{ localStorage.setItem('madrassa_active_year', y.id) }catch(e){}; if(typeof window !== 'undefined') window.dispatchEvent(new Event('madrassa_year_changed')) }} className="text-left hover:opacity-75">
-                    <div className="font-medium">{y.name}</div>
-                    <div className="text-xs text-gray-500">Created {new Date(y.createdAt).toLocaleString()}</div>
-                  </button>
-                </div>
-                <div className="flex items-center gap-2">
-                  <IconButton title="Delete" onClick={()=>handleDelete(y.id, y.name)} className="px-3 py-1 bg-red-500 text-white rounded">Del</IconButton>
-                </div>
+                {editingId === y.id ? (
+                  <form onSubmit={saveEdit} className="flex-1 flex gap-2 items-end">
+                    <input value={editName} onChange={e=>setEditName(e.target.value)} className="w-full px-3 py-2 border rounded" />
+                    <input type="date" value={editStartDate} onChange={e=>setEditStartDate(e.target.value)} className="px-3 py-2 border rounded" required />
+                    <input type="date" value={editEndDate} onChange={e=>setEditEndDate(e.target.value)} className="px-3 py-2 border rounded" required />
+                    <button type="submit" className="px-3 py-2 bg-green-600 text-white rounded" disabled={loading}>{loading ? 'Saving...' : 'Save'}</button>
+                    <button type="button" onClick={cancelEdit} className="px-3 py-2 bg-gray-200 rounded">Cancel</button>
+                  </form>
+                ) : (
+                  <>
+                    <div className="flex items-center gap-3">
+                      <div className="font-medium">{y.name}</div>
+                      {/* <div className="text-xs text-gray-500">ID: {y.id}</div> */}
+                      <div className="text-xs text-gray-500">{y.start_date ? `Start: ${y.start_date.substring(0,10)}` : ''}</div>
+                      <div className="text-xs text-gray-500">{y.end_date ? `End: ${y.end_date.substring(0,10)}` : ''}</div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <IconButton title="Edit" onClick={()=>startEdit(y)} className="px-3 py-1 bg-blue-500 text-white rounded">Edit</IconButton>
+                      <IconButton title="Delete" onClick={()=>handleDelete(y.id, y.name)} className="px-3 py-1 bg-red-500 text-white rounded">Del</IconButton>
+                    </div>
+                  </>
+                )}
               </div>
             ))}
           </div>
@@ -124,7 +224,7 @@ export default function AcademicYearsPage() {
         <div className="text-gray-500">Use the year selector (top right) to choose an active academic year. Manage years here by adding, deleting or migrating data.</div>
       </div>
 
-      {showMigrate && (
+      {/* {showMigrate && (
         <MigrateModal years={years} onClose={()=>setShowMigrate(false)} onMigrate={(from,to)=>{
           // simple mock: copy localStorage keys that start with madrassa_ from source year to target year
           try {
@@ -137,7 +237,7 @@ export default function AcademicYearsPage() {
           } catch (e) {}
           setShowMigrate(false)
         }} />
-      )}
+      )} */}
     </div>
   )
 }
